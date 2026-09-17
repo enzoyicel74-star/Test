@@ -1,0 +1,495 @@
+-- mind premium
+-- built off visnoukkk's obsidian fork, tweaked a lot
+-- if something breaks blame me not him lmao
+
+do
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local UIS = game:GetService("UserInputService")
+    local LP = Players.LocalPlayer
+    -- dont touch this its fragile
+    if _G.MindLiveStud then pcall(function() _G.MindLiveStud.Destroy() end) end
+    _G.MindLiveStud = { Enabled = true }
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "MindLiveStud"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true; gui.DisplayOrder = 99998
+    pcall(function() gui.Parent = game:GetService("CoreGui") end)
+    if not gui.Parent then gui.Parent = LP:WaitForChild("PlayerGui") end
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(0, 190, 0, 108); card.Position = UDim2.new(0, 16, 1, -124)
+    card.BackgroundColor3 = Color3.fromRGB(9, 11, 18); card.BorderSizePixel = 0; card.Parent = gui
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(28, 42, 72); stroke.Thickness = 1; stroke.Transparency = 0.15; stroke.Parent = card
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1, 0, 0, 32); header.BackgroundColor3 = Color3.fromRGB(7, 9, 15)
+    header.BorderSizePixel = 0; header.Parent = card
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 8)
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(1, 0, 0, 10); fill.Position = UDim2.new(0, 0, 1, -10)
+    fill.BackgroundColor3 = Color3.fromRGB(7, 9, 15); fill.BorderSizePixel = 0; fill.Parent = header
+    local accent = Instance.new("Frame")
+    accent.Size = UDim2.new(0, 3, 0, 18); accent.Position = UDim2.new(0, 6, 0.5, -9)
+    accent.BackgroundColor3 = Color3.fromRGB(60, 140, 255); accent.BorderSizePixel = 0; accent.Parent = header
+    Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -80, 0, 14); title.Position = UDim2.new(0, 14, 0, 3)
+    title.BackgroundTransparency = 1; title.Text = "MIND"
+    title.TextColor3 = Color3.fromRGB(220, 230, 245); title.Font = Enum.Font.GothamBold
+    title.TextSize = 11; title.TextXAlignment = Enum.TextXAlignment.Left; title.Parent = header
+    local sub = Instance.new("TextLabel")
+    sub.Size = UDim2.new(1, -80, 0, 11); sub.Position = UDim2.new(0, 14, 0, 17)
+    sub.BackgroundTransparency = 1; sub.Text = "POSITION"
+    sub.TextColor3 = Color3.fromRGB(90, 110, 145); sub.Font = Enum.Font.Gotham
+    sub.TextSize = 9; sub.TextXAlignment = Enum.TextXAlignment.Left; sub.Parent = header
+    local badge = Instance.new("Frame")
+    badge.Size = UDim2.new(0, 52, 0, 16); badge.Position = UDim2.new(1, -58, 0.5, -8)
+    badge.BackgroundColor3 = Color3.fromRGB(16, 22, 36); badge.BorderSizePixel = 0; badge.Parent = header
+    Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 3)
+    local bs = Instance.new("UIStroke")
+    bs.Color = Color3.fromRGB(40, 60, 100); bs.Thickness = 1; bs.Transparency = 0.3; bs.Parent = badge
+    local badgeTxt = Instance.new("TextLabel")
+    badgeTxt.Size = UDim2.new(1, 0, 1, 0); badgeTxt.BackgroundTransparency = 1
+    badgeTxt.Text = "PAID"; badgeTxt.TextColor3 = Color3.fromRGB(100, 130, 180)
+    badgeTxt.Font = Enum.Font.GothamBold; badgeTxt.TextSize = 8; badgeTxt.Parent = badge
+    local rows = {
+        { k = "X", c = Color3.fromRGB(200, 60, 60) },
+        { k = "Y", c = Color3.fromRGB(60, 190, 80) },
+        { k = "Z", c = Color3.fromRGB(60, 120, 230) },
+    }
+    local labels = {}
+    for i, row in ipairs(rows) do
+        local y = 38 + (i - 1) * 22
+        local bar = Instance.new("Frame")
+        bar.Size = UDim2.new(0, 2, 0, 14); bar.Position = UDim2.new(0, 8, 0, y + 2)
+        bar.BackgroundColor3 = row.c; bar.BorderSizePixel = 0; bar.Parent = card
+        Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+        local letter = Instance.new("TextLabel")
+        letter.Size = UDim2.new(0, 20, 0, 18); letter.Position = UDim2.new(0, 16, 0, y)
+        letter.BackgroundTransparency = 1; letter.Text = row.k
+        letter.TextColor3 = Color3.fromRGB(200, 210, 225); letter.Font = Enum.Font.Gotham
+        letter.TextSize = 12; letter.TextXAlignment = Enum.TextXAlignment.Left; letter.Parent = card
+        local val = Instance.new("TextLabel")
+        val.Size = UDim2.new(1, -60, 0, 18); val.Position = UDim2.new(0, 34, 0, y)
+        val.BackgroundTransparency = 1; val.Text = "0"
+        val.TextColor3 = Color3.fromRGB(225, 232, 245); val.Font = Enum.Font.Code
+        val.TextSize = 13; val.TextXAlignment = Enum.TextXAlignment.Right; val.Parent = card
+        labels[row.k] = val
+    end
+    local dragging = false
+    local dragStart = Vector2.new()
+    local cardStart = UDim2.new()
+    card.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; cardStart = card.Position
+        end
+    end)
+    card.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            card.Position = UDim2.new(cardStart.X.Scale, cardStart.X.Offset + delta.X, cardStart.Y.Scale, cardStart.Y.Offset + delta.Y)
+        end
+    end)
+    _G.MindLiveStud.SetEnabled = function(state) _G.MindLiveStud.Enabled = state; gui.Enabled = state end
+    _G.MindLiveStud.Toggle = function() _G.MindLiveStud.SetEnabled(not _G.MindLiveStud.Enabled) end
+    _G.MindLiveStud.Destroy = function() pcall(function() gui:Destroy() end); _G.MindLiveStud = nil end
+    RunService.Heartbeat:Connect(function()
+        if not _G.MindLiveStud or not _G.MindLiveStud.Enabled then return end
+        local char = LP.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local p = hrp.Position
+            labels.X.Text = string.format("%.0f", p.X)
+            labels.Y.Text = string.format("%.0f", p.Y)
+            labels.Z.Text = string.format("%.0f", p.Z)
+        else
+            labels.X.Text = "0"; labels.Y.Text = "0"; labels.Z.Text = "0"
+        end
+    end)
+end
+
+-- grabbed each piece separate so the urls dont look copy pasted
+local Obsidian = loadstring(game:HttpGet("https://raw.githubusercontent.com/visnoukkk/ObsidianLib/refs/heads/main/Library.lua"))()
+local Themes   = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/ThemeManager.lua"))()
+local Profiles = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/SaveManager.lua"))()
+
+local opts = Obsidian.Options
+local toggles = Obsidian.Toggles
+
+Obsidian.ForceCheckbox = false
+Obsidian.ShowToggleFrameInKeybinds = true
+
+local Window = Obsidian:CreateWindow({
+    Title = "MIND Premium",
+    Footer = "made by enzo",
+    Icon = 0,
+    NotifySide = "Left",
+    Center = true,
+    AutoShow = true,
+    Resizable = true,
+    MobileButtonsSide = "Left",
+    ShowCustomCursor = true,
+})
+
+local function Notify(text, duration)
+    Obsidian:Notify({ Title = "mind", Description = text, Time = duration or 3 })
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local char, root, hum
+local conns = {}
+
+local function killConn(key)
+    if conns[key] then conns[key]:Disconnect(); conns[key] = nil end
+end
+
+local function getLocalRoot() return root end
+
+local function safeCall(fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then
+        warn("[mind] error:", err)
+    end
+    return ok
+end
+
+local function safeSet(instance, prop, value)
+    if not instance then return end
+    pcall(function() instance[prop] = value end)
+end
+
+-- void stuff. ngl this part took me like 3 hours to get right
+-- the anticheat here is actually annoyingly good
+local voidConf = {
+    enabled = false, method = "Quantum",
+    SPEED = 1e15, CHAOS = 0.98, BASE_X = 0, BASE_Y = 0, BASE_Z = 0,
+    RADIUS = 1e15, Y_MIN = -1e15, Y_MAX = 1e15,
+    TP_MIN_STUDS = -9e14, TP_MAX_STUDS = 9e14,
+    TP_RAND_ENABLED = true, TP_RAND_MIN = -1e15, TP_RAND_MAX = 1e15,
+    TP_VERT_SPIKE = true, TP_VERT_MULT_MIN = 0.5, TP_VERT_MULT_MAX = 3.0,
+    TP_CORNER_WEIGHT = 0.55, TP_EDGE_WEIGHT = 0.35, TP_SCREEN_JITTER = 0.12,
+    TP_SCREEN_CLAMP = true, TP_VIEWPORT_RAY = true, TP_NEG_BIAS = true,
+    TP_PRESERVE_Y = false,
+    SAFE_RADIUS = 0, ORBIT_TARGET = false, ORBIT_SPEED = 90,
+    STOP_ON_DAMAGE = false, PREDICTIVE = false, PREDICT_LEAD = 0.15,
+    AUTO_REENABLE = false, ANTIFLING = false,
+    FREEZE_ON_GROUND = false, ANTIVOID = false,
+    DURATION_ENABLED = false, DURATION = 10,
+    RANDOM_DURATION = false, DURATION_MIN = 5, DURATION_MAX = 30,
+    STAY_IN_REGION = false, REGION_X = 1e4, REGION_Y = 1e4, REGION_Z = 1e4,
+    REGION_CIRCLE = true, REGION_BOX = false, REGION_CENTER_SELF = true,
+    REGION_CX = 0, REGION_CY = 0, REGION_CZ = 0,
+    REGION_COLLAPSE = false, REGION_COLLAPSE_SPD = 50,
+    REGION_NOTIFY_EXIT = false, REGION_SNAP_EDGE = true,
+    LOG_POSITIONS = false,
+    SMART_EVASION = false, SMART_EVASION_INF = false,
+    EVASION_RANGE = 80, EVASION_THREAT_DIST = 40,
+    EVASION_DODGE_POWER = 100, EVASION_COOLDOWN = 0.03,
+    EVASION_PREDICT_TIME = 0.18, EVASION_NOTIFY = false,
+    EVASION_MICRO_JITTER = true, EVASION_VERTICAL_SPIKE = true,
+    EVASION_LAYERED = true, EVASION_THREAT_SCALE = true,
+    KILLER_ENABLED = false, KILLER_DESYNC = true,
+    KILLER_FAKE_GROUND = true, KILLER_FORCE_HITBOX = true,
+    KILLER_HITBOX_SIZE = 500, KILLER_RANGE = 1e15,
+    KILLER_AUTO_SHOOT = true, KILLER_FREEZE_TARGET = true,
+    KILLER_SNAP_TO_MAP = true, KILLER_AUTO_AIM = true,
+    KILLER_AIM_STRENGTH = 1, KILLER_NETWORK_OWN = true,
+    KILLER_NO_CLIP = true,
+}
+
+local orbit = {
+    orbitEnabled = false, orbitSpeed = 90, orbitDist = 8, orbitHeight = 0,
+    orbitLerp = 0.3, orbitMode = "Circle", orbitPredict = false, orbitPredStr = 0.2,
+    orbitFace = true, orbitLockDist = 999999999, orbitTarget = "Closest", orbitAxis = "XZ",
+    orbitReverse = false, orbitRandRad = false, orbitRandMin = 5, orbitRandMax = 20,
+    orbitYawOff = 0, orbitPitchOff = 0, orbitOffX = 0, orbitOffZ = 0,
+    orbitHeightOscillate = false, orbitHeightOscAmp = 5, orbitHeightOscSpeed = 2,
+    orbitSpeedRandom = false, orbitSpeedRandMin = 20, orbitSpeedRandMax = 200,
+    orbitDistPulse = false, orbitDistPulseAmp = 5, orbitDistPulseSpeed = 1,
+    orbitZigzag = false, orbitZigzagAmp = 3, orbitZigzagFreq = 4,
+    orbitSnapBack = false, orbitSnapInterval = 0.5,
+    orbitAntiFling = true, orbitVelZero = true, orbitPhaseThrough = true,
+    orbitNetworkOwn = true, orbitNoClip = true, orbitMassless = true,
+    orbitAutoDisable = false, orbitAutoDisableRange = 200, orbitSmartTarget = true,
+    orbitSmoothCatch = true, orbitPredictMult = 1.0, orbitLookAhead = true,
+    orbitWallClip = true, orbitIgnoreCollide = true,
+    orbitAutoShoot = true, orbitShootCooldown = 0.01, orbitAttackRange = 1e15,
+    orbitAutoAim = true, orbitAimStrength = 1,
+    orbitInfiniteRange = true, orbitExpandedHitbox = true, orbitHitboxSize = 500,
+    orbitFastTp = true, orbitFastTpCount = 20, orbitFastTpInterval = 0.001,
+    orbitStickToTarget = true, orbitStickOffset = 2,
+    orbitBypassAnticheat = true, orbitAntiKick = true,
+}
+
+local predConf = {
+    predEnabled = false, predRadius = 120, predDodgeDist = 80,
+    predCooldown = 0.03, predThreshold = 300, predMult = 1,
+    predLeadTime = 0.22, predShootDetect = true, predShootDot = 0.80,
+    predShootDist = 100, predBulletSpd = 200, predReactTime = 0.06,
+    predRaycast = true, predMultiPoint = true, predBackstep = true,
+    predReactionLadder = true, predThreatScore = true,
+    predAimVector = true, predCameraBone = true, predAnimDetect = true,
+    predRemoteHook = true, predPredictiveAim = true, predPredictiveLead = 0.25,
+    predInfiniteRange = true, predNotifyAnywhere = true,
+    predRivalsMode = true, predRivalsHitboxExpand = true, predRivalsHitboxSize = 150,
+    predSafeZone = true, predSafeZoneRadius = 500,
+    predAutoShoot = true, predAutoShootRange = 1e15,
+    predNoClip = true, predMassless = true,
+    predBypassAnticheat = true, predAntiKick = true,
+    predNetworkOwn = true, predVelZero = true,
+    predAutoAim = true, predAimStrength = 1,
+    predFastTp = true, predFastTpCount = 20, predFastTpInterval = 0.001,
+    predStickToTarget = true, predStickOffset = 2,
+    predPhaseThrough = true, predIgnoreCollide = true,
+}
+
+local antiBaitOpts = {
+    enabled = false, velSpikeEnabled = true, velThreshold = 200,
+    velDodgeDist = 100, flickerEnabled = true, flickerWindow = 0.3,
+    flickerMinTps = 2, flickerTpDist = 10, dodgeCooldown = 0.02,
+    dodgeMode = "Perpendicular", notifyOnDodge = true,
+    dodgeOnShoot = true, shootLookThresh = 0.85,
+    gunPredEnabled = true, gunPredDot = 0.80, gunPredVelMin = 30,
+    gunPredDodgeDist = 100, gunPredCooldown = 0.02, gunPredLead = 0.18,
+    baitEnabled = true, baitStallTime = 0.08, baitStallChance = 0.4,
+    baitFakeLock = true, baitFakeLockTime = 0.06,
+    baitHookActivate = true, baitReactionWindow = 0.18,
+    baitNotifyLabel = true, reScanInterval = 2,
+    infiniteRange = true, infiniteRadius = 5e12,
+    rivalsMode = true, rivalsRemoteScan = true,
+    rivalsToolScan = true, rivalsAnimScan = true,
+    antiBaitNoClip = true, antiBaitMassless = true,
+    antiBaitVelZero = true, antiBaitNetworkOwn = true,
+    antiBaitBypassAnticheat = true, antiBaitAntiKick = true,
+    antiBaitFastTp = true, antiBaitFastTpCount = 20, antiBaitFastTpInterval = 0.001,
+    antiBaitStickToTarget = true, antiBaitStickOffset = 2,
+    antiBaitPhaseThrough = true, antiBaitIgnoreCollide = true,
+    antiBaitAutoAim = true, antiBaitAimStrength = 1,
+    antiBaitAutoShoot = true, antiBaitAutoShootRange = 1e15,
+    antiBaitUniversalAim = true, antiBaitUniversalAnimation = true,
+    antiBaitUniversalVelocity = true,
+}
+
+local rangeExt = {
+    enabled = false, range = 5e12, hitboxSize = 500,
+    expandHitboxes = true, hitboxTransparency = 0.5,
+    patchRaycast = true, patchWeaponValues = true,
+    spoofOrigin = false, spoofDistance = 200,
+    fastCast = false, fastCastRate = 60,
+    fovBoost = false, fovValue = 160,
+    includeSelf = false, teamCheck = false, restoreOnDisable = true,
+    aimOnly = false, holdKey = false, progressive = false,
+    safeDistance = false, safeDist = 5, maxEnemies = 50,
+    originalParts = {}, originalRaycast = nil, originalFov = 70,
+    rivalsMode = true, rivalsAvatarScale = 50,
+    rivalsBreakHitbox = true, rivalsBreakSize = 2500,
+    rivalsNoCollide = true, rivalsMassless = true,
+    rivalsExpandAll = true, rivalsExpandSelf = true,
+    rangeExtNoClip = true, rangeExtVelZero = true,
+    rangeExtNetworkOwn = true, rangeExtAntiFling = true,
+    rangeExtBypassAnticheat = true, rangeExtAntiKick = true,
+    rangeExtFastTp = true, rangeExtFastTpCount = 20, rangeExtFastTpInterval = 0.001,
+    rangeExtStickToTarget = true, rangeExtStickOffset = 2,
+    rangeExtPhaseThrough = true, rangeExtIgnoreCollide = true,
+    rangeExtAutoAim = true, rangeExtAimStrength = 1,
+    rangeExtAutoShoot = true, rangeExtAutoShootRange = 1e15,
+    rangeExtInfiniteRange = true,
+}
+
+local translocState = {
+    enabled = false, frequency = 512, offsetDist = 1e15,
+    offsetMode = "Ahead", offsetY = 0, fakeVel = true,
+    fakeVelMag = 1e15, snapBack = true, jitter = true,
+    jitterAmp = 1e14, layers = 10,
+    burstMode = false, burstCount = 10, burstInterval = 0.001,
+    randomFrequency = false, freqMin = 50, freqMax = 500,
+    spinFake = false, spinFakeSpeed = 720,
+    mirrorX = false, mirrorZ = false,
+    cascadeOffset = false, cascadeStep = 1e11,
+    wavePattern = false, waveFreq = 2, waveAmp = 1e11,
+    pingPong = false, pingPongDist = 1e12,
+    pulse = false, pulseAmp = 1e11, pulseSpeed = 1,
+    diagonal = false, diagonalAngle = 45,
+    alternatingVertical = false, altVertAmp = 1e11,
+    screenEdge = false, orbitFake = false, orbitSpeed = 90, orbitRadius = 1e11,
+    zoneEscape = false, zoneEscapeRadius = 200,
+    autoDodge = false, autoDodgeRadius = 60,
+    usePreRenderCommit = true, networkOwnerFix = true,
+    rivalsMode = true, rivalsTranslocFreq = 2048,
+    rivalsTranslocDist = 1e15, rivalsTranslocLayers = 20,
+    rivalsFakeVel = true, rivalsFakeVelMag = 1e15,
+    rivalsSnapBack = true, rivalsNetworkOwner = true,
+    translocNoClip = true, translocAntiFling = true,
+    translocVelZero = true, translocMassless = true,
+    translocPhaseThrough = true, translocIgnoreCollide = true,
+    translocHipHeight = 0,
+    translocBypassAnticheat = true, translocAntiKick = true,
+    translocFastTp = true, translocFastTpCount = 20, translocFastTpInterval = 0.001,
+    translocStickToTarget = true, translocStickOffset = 2,
+    translocAutoAim = true, translocAimStrength = 1,
+    translocAutoShoot = true, translocAutoShootRange = 1e15,
+    translocInfiniteRange = true,
+}
+
+local atGuard = {
+    enabled = false, detectRadius = 100, detectWindow = 0.5,
+    minTps = 3, dodgeDistance = 30, dodgeCooldown = 0.2,
+    mode = "Evade", freezeTime = 0.1, predictLead = 0.1, notify = true,
+    counterTeleport = false, counterTpOffset = 50,
+    autoEvadeAll = false, evadeAllRadius = 200,
+    shieldMode = false, shieldRadius = 20,
+    bounceback = false, bouncebackDist = 100,
+    spinEvade = false, spinEvadeSpeed = 360,
+    multiDodge = false, multiDodgeCount = 3,
+    atNoClip = true, atMassless = true,
+    atVelZero = true, atNetworkOwn = true,
+    atAntiFling = true, atPhaseThrough = true,
+    atIgnoreCollide = true, atHipHeight = 0,
+    atBypassAnticheat = true, atAntiKick = true,
+    atFastTp = true, atFastTpCount = 20, atFastTpInterval = 0.001,
+    atStickToTarget = true, atStickOffset = 2,
+    atAutoAim = true, atAimStrength = 1,
+    atAutoShoot = true, atAutoShootRange = 1e15,
+    atInfiniteRange = true,
+}
+
+local velDesync = {
+    enabled = false, intensity = 50, angle = 90, jitter = 20,
+    flip = false, speed = 10,
+    randomizeAngle = false, angleMin = 0, angleMax = 360,
+    multiVector = false, vectorCount = 3,
+    spikeMode = false, spikeInterval = 0.05, spikeMag = 1e6,
+    invertOnTimer = false, invertInterval = 0.2,
+    oscillate = false, oscillateFreq = 5, oscillateAmp = 30,
+    noiseVel = false, noiseScale = 1,
+    burstDesync = false, burstEvery = 0.1, burstMag = 5e5,
+    counterVel = false, rotateVel = false, rotateVelSpeed = 180,
+    vdNoClip = true, vdMassless = true,
+    vdAntiFling = true, vdVelZero = false,
+    vdNetworkOwn = true, vdPhaseThrough = true,
+    vdIgnoreCollide = true, vdHipHeight = 0,
+    vdBypassAnticheat = true, vdAntiKick = true,
+    vdFastTp = true, vdFastTpCount = 20, vdFastTpInterval = 0.001,
+    vdStickToTarget = true, vdStickOffset = 2,
+    vdAutoAim = true, vdAimStrength = 1,
+    vdAutoShoot = true, vdAutoShootRange = 1e15,
+    vdInfiniteRange = true,
+}
+
+local riotGod = {
+    enabled = false, speed = 0.03, evadeRange = 30,
+    spinSpeed = 180, avoidBullets = true, bulletDodge = 40,
+    heightVariance = 10, groundSnap = false, phaseMode = false,
+    phaseInterval = 0.02, spinAxis = "Y", randomAxis = false,
+    maxJump = 200, minJump = 10, multiTp = false,
+    multiTpCount = 3, multiTpDelay = 0.01,
+    autoShoot = true, attackRange = 1e15, shootCooldown = 0.01,
+    lastShot = 0, forceFaceTarget = true,
+    rgNoClip = true, rgMassless = true, rgAntiFling = true,
+    rgVelZero = true, rgNetworkOwn = true, rgPhaseThrough = true,
+    rgIgnoreCollide = true, rgHipHeight = 0,
+    rgAutoShootAccurate = true, rgAimStrength = 1,
+    rgBypassAnticheat = true, rgAntiKick = true,
+    rgFastTp = true, rgFastTpCount = 20, rgFastTpInterval = 0.001,
+    rgStickToTarget = true, rgStickOffset = 2,
+    rgAutoAim = true, rgInfiniteRange = true,
+}
+
+local riotAbuse = {
+    enabled = false, mode = "Stick", height = 3, forward = 0, right = 0, down = 0,
+    autoShoot = true, attackRange = 1e15, orbitEnabled = false,
+    orbitRadius = 5, orbitSpeed = 200, orbitHeight = 2,
+    spinOnTarget = false, spinSpeed = 360, phaseOffset = 3,
+    multiTarget = false, randomOffset = false, randomOffAmp = 2,
+    bounceHeight = 5, bounceSpeed = 8, shootCooldown = 0.01,
+    lastShot = 0, predictTarget = false, predictLead = 0.1,
+    forceFaceTarget = true,
+    raNoClip = true, raMassless = true, raAntiFling = true,
+    raVelZero = true, raNetworkOwn = true, raPhaseThrough = true,
+    raIgnoreCollide = true, raHipHeight = 0,
+    raAutoShootAccurate = true, raAimStrength = 1,
+    raBypassAnticheat = true, raAntiKick = true,
+    raFastTp = true, raFastTpCount = 20, raFastTpInterval = 0.001,
+    raStickToTarget = true, raStickOffset = 2,
+    raAutoAim = true, raInfiniteRange = true,
+}
+
+local sling = {
+    enabled = false, mode = "Follow", targetMode = "Closest",
+    hideAvatar = true, autoShoot = true,
+    stickHeight = 2,
+    attackRange = 1e15, shotCooldown = 0.01,
+    useTargetVel = true,
+    fastTpSpeed = 0.005, fastTpOffset = 1.5,
+    fastTpJitter = 1, fastTpMulti = true, fastTpCount = 5,
+    fastTpPenetrate = true, fastTpRandAng = true, rushCooldown = 0.01,
+    followLerp = 0.5, followDistance = 2, followHeight = 2,
+    followPredict = true, followLead = 0.15,
+    stalkDistance = 6, stalkHeight = 3, stalkBehind = true,
+    hoverHeight = 8, hoverBob = true, hoverBobAmp = 1, hoverBobSpeed = 2,
+    hideTransparency = 1, hideAccessories = true,
+    rivalsMode = true, rivalsInfiniteRange = true,
+    rivalsRange = 1e15, rivalsAutoShoot = true,
+    rivalsHitboxExpand = true, rivalsHitboxSize = 500,
+    rivalsNetworkOwner = true, rivalsFastTp = true,
+    rivalsFastTpCount = 20, rivalsFastTpInterval = 0.001,
+    rivalsPositionLock = true,
+    noTpMode = true, noTpRange = 1e15,
+    noTpHitboxSize = 2000, noTpAutoShoot = true,
+    noTpAimAssist = true, noTpNetworkOwner = true,
+    noTpSilentAim = true, noTpOriginSpoof = true,
+    noTpRaycastPatch = true, noTpWeaponRange = 1e15,
+    noTpPingComp = true, noTpTargetLock = true,
+    noTpShotRedirect = true, noTpLookVector = true,
+    noTpSpread = 0, noTpRecoil = 0,
+    noTpVelocityComp = true, noTpGravityComp = true,
+    noTpInfiniteRange = true, noTpInstantHit = true,
+    noTpHitscanOverride = true, noTpWallBang = true,
+    noTpProjectileFollow = true, noTpSpoofSelf = true,
+    slingNoClip = true, slingMassless = true,
+    slingAntiFling = true, slingVelZero = true,
+    slingPhaseThrough = true, slingIgnoreCollide = true,
+    slingHipHeight = 0,
+    slingAutoAim = true, slingAimStrength = 1,
+    slingAutoShootAccurate = true, slingTargetLock = true,
+    slingAntiKick = true, slingBypassAnticheat = true,
+    slingFastTp = true, slingFastTpCount = 20, slingFastTpInterval = 0.001,
+    slingStickToTarget = true, slingStickOffset = 2,
+    slingInfiniteRange = true,
+}
+
+-- spinning on Y looks the least sus in game
+-- rotate X/Z too fast and you can see the model pop
+local antiAim = {
+    enabled = false, mode = "RandomSpin", speed = 5000,
+    angle = 90, randomSpeed = true, jitterPitch = true,
+    pitchAngle = 45, yawAngle = 45, staticYaw = 90, staticPitch = 0,
+    customYaw = 180, customPitch = 0, jitterYaw = true,
+    fakeAngle = false, fakeYaw = 45, fakePitch = 0,
+    microJitter = false, microJitterAmp = 5, microJitterSpeed = 30,
+    desyncMode = false, desyncOffset = 180,
+    rollEnabled = false, rollSpeed = 360,
+    breatheEffect = false, breatheAmp = 3, breatheSpeed = 1,
+    randomFlip = false, flipChance = 0.05,
+    enhancedMode = true, enhancedSpinSpeed = 10000,
+    enhancedJitterAmp = 90, enhancedJitterSpeed = 60,
+    enhancedDesyncOffset = 270, enhancedRollSpeed = 720,
+    enhancedBreatheAmp = 15, enhancedBreatheSpeed = 3,
+    enhancedFlipChance = 0.25, enhancedMicroAmp = 45,
+    enhancedMicroSpeed = 120, enhancedFakeYaw = 90, enhancedFakePitch = 45,
+    multiAxisSpin = true, multiAxisX = true,
+    multiAxisY = true, multiAxisZ = true,
+    multiAxisSpeedX = 3600, multiAxisSpeedY = 5400, multiAxisSpeedZ = 2700,
+    chaosMode = true, chaosInterval = 
