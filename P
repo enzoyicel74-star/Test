@@ -1,0 +1,1957 @@
+repeat task.wait(0.1) until game:IsLoaded()
+task.wait(2)
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local LocalPlayer = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local mouse = LocalPlayer:GetMouse()
+
+if not RunService or not RunService.Heartbeat then return end
+
+local function safeThreadIdentity() if setthreadidentity then pcall(setthreadidentity, 2) end end
+local function safeThreadIdentityReset() if setthreadidentity then pcall(setthreadidentity, 7) end end
+
+local CoreGuiRef = (function()
+    if gethui then local ok, hui = pcall(gethui); if ok and hui then return hui end end
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    if ok and cg then return cg end
+    return LocalPlayer:WaitForChild("PlayerGui")
+end)()
+
+if hookfunction and newcclosure and getcallingscript then
+    pcall(function()
+        local oldSM = nil
+        oldSM = hookfunction(setmetatable, newcclosure(function(Table, MetaTable)
+            if type(MetaTable) == "table" and rawget(MetaTable, "__mode") == "kv" then
+                local Caller = getcallingscript()
+                if Caller and Caller.Name == "MiscellaneousController" then return oldSM(Table, {}) end
+            end
+            return oldSM(Table, MetaTable)
+        end))
+    end)
+    pcall(function()
+        local oldRL = nil
+        oldRL = hookfunction(rawlen, newcclosure(function(Table)
+            if type(Table) == "table" then
+                local Caller = getcallingscript()
+                if Caller and Caller.Name == "MiscellaneousController" then return 3 end
+            end
+            return oldRL(Table)
+        end))
+    end)
+end
+
+local function SeahookLoadingScreen(onDone)
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "SeahookLoadingScreen"; sg.ResetOnSpawn = false; sg.DisplayOrder = 999999
+    sg.IgnoreGuiInset = true; sg.Parent = CoreGuiRef
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0); bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BorderSizePixel = 0; bg.ZIndex = 1; bg.Parent = sg
+
+    local logo = Instance.new("TextLabel")
+    logo.Size = UDim2.new(1, -60, 0, 100); logo.Position = UDim2.new(0, 30, 0.4, -50)
+    logo.BackgroundTransparency = 1; logo.Text = "SEAHOOK"
+    logo.TextColor3 = Color3.fromRGB(255, 255, 255); logo.Font = Enum.Font.GothamBlack
+    logo.TextSize = 62; logo.TextXAlignment = Enum.TextXAlignment.Center
+    logo.ZIndex = 11; logo.Parent = bg
+    local lg = Instance.new("UIGradient")
+    lg.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 230)), ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 255, 255))})
+    lg.Parent = logo
+
+    local sub = Instance.new("TextLabel")
+    sub.Size = UDim2.new(1, -60, 0, 24); sub.Position = UDim2.new(0, 30, 0.4, 60)
+    sub.BackgroundTransparency = 1; sub.Text = "go mog the kids 😈"
+    sub.TextColor3 = Color3.fromRGB(0, 255, 230); sub.Font = Enum.Font.GothamBold
+    sub.TextSize = 16; sub.TextXAlignment = Enum.TextXAlignment.Center
+    sub.ZIndex = 11; sub.Parent = bg
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(0, 400, 0, 8); track.Position = UDim2.new(0.5, -200, 0.5, 60)
+    track.BackgroundColor3 = Color3.fromRGB(8, 16, 24); track.BorderSizePixel = 0
+    track.ZIndex = 11; track.Parent = bg
+    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(0, 0, 1, 0); fill.BackgroundColor3 = Color3.fromRGB(0, 255, 230)
+    fill.BorderSizePixel = 0; fill.ZIndex = 12; fill.Parent = track
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    local startT = tick()
+    local conn = RunService.RenderStepped:Connect(function()
+        fill.Size = UDim2.new(math.clamp((tick() - startT) / 2.5, 0, 1), 0, 1, 0)
+    end)
+
+    task.spawn(function()
+        task.wait(2.5)
+        if conn then conn:Disconnect() end
+        local fi = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+        for _, obj in ipairs({bg, logo, sub, track, fill}) do
+            if obj:IsA("TextLabel") then
+                TweenService:Create(obj, fi, { TextTransparency = 1 }):Play()
+            else
+                TweenService:Create(obj, fi, { BackgroundTransparency = 1 }):Play()
+            end
+        end
+        task.wait(0.5)
+        pcall(function() sg:Destroy() end)
+        if onDone then onDone() end
+    end)
+end
+
+local function BuildSeahook()
+    local ok, err = pcall(function()
+        local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+        local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/visnoukkk/ObsidianLib/refs/heads/main/Library.lua"))()
+        local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+        local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+        local Options = Library.Options
+        local Toggles = Library.Toggles
+        getgenv().Library = Library
+        getgenv().Options = Options
+        getgenv().Toggles = Toggles
+
+        getgenv().elisium = getgenv().elisium or {}
+        local ELI = getgenv().elisium
+
+        ELI.silent_aim = ELI.silent_aim or {
+            enable=false, closest_part=false, show_fov=false, show_fill=false, fov_radius=180, lerp=0,
+            fov_color=Color3.fromRGB(120,81,166), fov_fill_color=Color3.fromRGB(120,81,166),
+            fov_fill_color2=Color3.fromRGB(255,255,255), fov_fill_transparency=0.6,
+            fov_outline_transparency=0.2, fov_thickness=2, fov_color2=Color3.fromRGB(255,255,255),
+            fov_spin=false, fov_spin_speed=90, hit_chance=100, riot_shield=false,
+        }
+        ELI.aimbot = ELI.aimbot or {
+            enable=false, closest_part=false, show_fov=false, show_fill=false, fov_radius=180, lerp=0, smoothing=1,
+            fov_color=Color3.fromRGB(120,81,166), fov_fill_color=Color3.fromRGB(120,81,166),
+            fov_fill_color2=Color3.fromRGB(255,255,255), fov_fill_transparency=0.6,
+            fov_outline_transparency=0.2, fov_thickness=2, fov_color2=Color3.fromRGB(255,255,255),
+            fov_spin=false, fov_spin_speed=90,
+        }
+        ELI.triggerbot = ELI.triggerbot or { enable=false, team_check=false, reaction_time=0.05, shoot_delay=0.1 }
+        ELI.targeting = ELI.targeting or { max_distance=100, part="Head", visible_only=false, auto_shoot=false }
+        ELI.guns = ELI.guns or { no_muzzle_flash=false, no_spread=false, full_auto=false, rapid_fire=false, rapid_fire_delay=0.05 }
+        ELI.ragebot = ELI.ragebot or { Enabled=false, FireRate=0.0005, WeaponSlot="Melee" }
+        ELI.misc = ELI.misc or {
+            device_spoof={enable=false,type="MouseKeyboard"},
+            arcade={grab_drops=false, auto_respawn=false},
+            third_person={enable=false,x=0,y=1.5,z=13},
+            no_clip=true,
+            underground=false,
+            auto_vote_map={enable=false, map=""},
+            auto_queue={enable=false, queue_mode=""},
+            spoofer={
+                you = { enabled=false, values = {
+                    winstreak="999", level="999", elo="3600", status="Prime",
+                    influencer=false, employee=false, group=false,
+                } },
+                others = { enabled=false, values = {
+                    winstreak="0", level="0", elo="0", status="Prime",
+                    influencer=false, employee=false, group=false,
+                } },
+            },
+        }
+        ELI.character = ELI.character or {
+            infinite_double_jump=false,
+            double_jump_height={enable=false,height=50},
+            slide_boost={enable=false,speed=60},
+            walkspeed={enable=false,multiplier=1.5},
+            fly={enable=false,speed=50},
+            auto_slide=false,
+            emote={enable=false, selected="Meditate", custom_id="", speed=2},
+        }
+        ELI.antiaim = ELI.antiaim or { enable=false, pitch=-3.14, speed=30, spinbot=true, arm_spin=true }
+        ELI.visuals = ELI.visuals or {
+            chams={enable=false,fill_color=Color3.fromRGB(0,170,255),outline_color=Color3.fromRGB(255,255,255),fill_transparency=0.5,outline_transparency=0,team_check=false},
+            motion_blur={enable=false,intensity=0.5,sensitivity=1},
+            fov_changer={enable=false,fov=80},
+            stretched_res={enable=false,amount=0.20},
+            trajectory={enable=false,all_weapons=false,speed=90,arc_up=10,color=Color3.fromRGB(120,81,166)},
+            damage_numbers={enable=false,color_type="Gradient",color1=Color3.fromRGB(255,80,80),color2=Color3.fromRGB(255,210,90),font="GothamBold",duration=0.8,rise=42,text_size=18},
+            crosshair={enable=false,top_line=true,bottom_line=true,left_line=true,right_line=true,rotation=0,length=6,thickness=1,gap=3,color=Color3.fromRGB(0,255,170),dot=false,spin=false,spin_speed=90},
+            hit_notify={enable=false,duration=3,msg="hit {target} for {damage}",color=Color3.fromRGB(255,200,50)},
+            hitsound={enable=false,selected="windows xp",volume=1,pitch=1},
+            viewmodel={
+                weapon_chams={enable=false,color=Color3.fromRGB(0,170,255),transparency=0.3,outline_transparency=0.5,depth="AlwaysOnTop"},
+                arm_chams={enable=false,color=Color3.fromRGB(0,170,255),transparency=0.3,outline_transparency=0.5,invisible=false},
+                offsets={enable=false,x=0,y=0,z=0},
+            },
+        }
+        ELI.world = ELI.world or {
+            fog={enable=false,color=Color3.fromRGB(255,255,255),start=150,finish=550},
+            ambient={enable=false,color=Color3.fromRGB(255,255,255)},
+            clock={enable=false,time=14},
+            brightness={enable=false,level=1},
+            exposure={enable=false,level=0},
+            color_shift_top={enable=false,color=Color3.fromRGB(255,255,255)},
+            color_shift_bottom={enable=false,color=Color3.fromRGB(255,255,255)},
+            skybox={enable=false,selected="Deep Space",rotate=false,rotate_speed=1,rotate_direction="Horizontal",rotate_method="Spin",remove_sun=false,remove_moon=false,remove_stars=false},
+            atmosphere={enable=false,glare=1.5,haze=10,offset=0.4,density=0.5,color=Color3.fromRGB(255,255,255),decay=Color3.fromRGB(90,60,30)},
+            shaders={
+                blur={enable=false,size=12},
+                bloom={enable=false,intensity=1,size=24,threshold=0.9},
+                dof={enable=false,focus=25,intensity=0.15},
+                sunrays={enable=false,intensity=0.25,spread=1},
+                cc={enable=false,saturation=0,contrast=0,tint=Color3.fromRGB(255,255,255)},
+            },
+        }
+
+        local replicated_storage = game:GetService("ReplicatedStorage")
+        local modules = replicated_storage:WaitForChild("Modules", 10)
+        local item_library, enum_library, utility
+        pcall(function() item_library = require(modules.ItemLibrary) end)
+        pcall(function() enum_library = require(modules.EnumLibrary) end)
+        pcall(function() utility = require(modules.Utility) end)
+
+        local fighter_controller, camera_controller, gun, katana, mechanics_controller
+        pcall(function() fighter_controller = require(LocalPlayer.PlayerScripts.Controllers.FighterController) end)
+        pcall(function() camera_controller = require(LocalPlayer.PlayerScripts.Controllers.CameraController) end)
+        pcall(function() mechanics_controller = require(LocalPlayer.PlayerScripts.Controllers.MechanicsController) end)
+        pcall(function() gun = require(LocalPlayer.PlayerScripts.Modules.ItemTypes.Gun) end)
+        pcall(function() katana = require(LocalPlayer.PlayerScripts.Modules.Items.Katana) end)
+
+        local spectate_controller
+        pcall(function() spectate_controller = require(LocalPlayer.PlayerScripts.Controllers:WaitForChild("SpectateController")) end)
+
+        local local_fighter = fighter_controller and fighter_controller.LocalFighter
+
+        -- =====================================================
+        -- PLAYER SPOOFER
+        -- =====================================================
+        local Spoofer = {
+            Binders = setmetatable({}, { __mode = "k" }),
+            Connections = {},
+            Started = false,
+
+            Fields = {
+                { key = "winstreak",  attribute = "StatisticDuelsWinStreak", control = "number", fixed = false },
+                { key = "level",      attribute = "Level",                   control = "number", fixed = false },
+                { key = "elo",        attribute = "DisplayELO",              control = "number", fixed = false },
+                { key = "status",     attribute = "PlayerStatus",            control = "text",   fixed = false },
+                { key = "influencer", attribute = "IsInfluencer",            control = "const",  fixed = true, constValue = true },
+                { key = "employee",   attribute = "IsRobloxEmployee",        control = "const",  fixed = true, constValue = true },
+                { key = "group",      attribute = "GroupRank",               control = "const",  fixed = true, constValue = 255 },
+            },
+        }
+
+        function Spoofer.CreateBinder(instance, attribute)
+            local binder = {
+                Instance = instance,
+                Attribute = attribute,
+                Original = instance:GetAttribute(attribute),
+                IsWriting = false,
+                Spoofed = nil,
+                Connection = nil,
+            }
+            binder.Connection = instance:GetAttributeChangedSignal(attribute):Connect(function()
+                if binder.IsWriting then return end
+                binder.Original = instance:GetAttribute(attribute)
+                binder.IsWriting = true
+                if binder.Spoofed ~= nil then
+                    instance:SetAttribute(attribute, binder.Spoofed.value)
+                end
+                binder.IsWriting = false
+            end)
+            return binder
+        end
+
+        function Spoofer.BinderSet(binder, spoofed)
+            binder.Spoofed = spoofed
+            binder.IsWriting = true
+            if spoofed == nil then
+                binder.Instance:SetAttribute(binder.Attribute, binder.Original)
+            else
+                binder.Instance:SetAttribute(binder.Attribute, spoofed.value)
+            end
+            binder.IsWriting = false
+        end
+
+        function Spoofer.BinderDestroy(binder)
+            if binder.Connection then binder.Connection:Disconnect() end
+            pcall(function()
+                binder.Instance:SetAttribute(binder.Attribute, binder.Original)
+            end)
+        end
+
+        function Spoofer.Bind(player, attribute)
+            local entries = Spoofer.Binders[player]
+            if entries == nil then
+                entries = {}
+                Spoofer.Binders[player] = entries
+            end
+            local binder = entries[attribute]
+            if binder == nil then
+                binder = Spoofer.CreateBinder(player, attribute)
+                entries[attribute] = binder
+            end
+            return binder
+        end
+
+        function Spoofer.Unbind(player, attribute)
+            local entries = Spoofer.Binders[player]
+            if entries == nil then return end
+            local binder = entries[attribute]
+            if binder ~= nil then
+                Spoofer.BinderDestroy(binder)
+                entries[attribute] = nil
+            end
+        end
+
+        function Spoofer.SetSpoof(player, attribute, enabled, value)
+            if enabled then
+                Spoofer.BinderSet(Spoofer.Bind(player, attribute), { value = value })
+            else
+                Spoofer.Unbind(player, attribute)
+            end
+        end
+
+        function Spoofer.ScopeKey(player)
+            return player == LocalPlayer and "you" or "others"
+        end
+
+        function Spoofer.Apply(player)
+            if not player or player.Parent == nil then return end
+            local scope = Spoofer.ScopeKey(player)
+            local cfg = ELI.misc.spoofer[scope]
+            if not cfg then return end
+
+            for _, field in ipairs(Spoofer.Fields) do
+                local enabled = cfg.enabled and cfg.values[field.key .. "_on"] == true
+                if field.fixed then
+                    Spoofer.SetSpoof(player, field.attribute, enabled, field.constValue)
+                else
+                    local raw = cfg.values[field.key]
+                    local value = raw
+                    if field.control == "number" then
+                        value = tonumber(raw)
+                    elseif type(raw) == "string" and raw == "" then
+                        value = nil
+                    end
+                    Spoofer.SetSpoof(player, field.attribute, enabled and value ~= nil, value)
+                end
+            end
+        end
+
+        function Spoofer.Cleanup(player)
+            local entries = Spoofer.Binders[player]
+            if entries == nil then return end
+            for _, binder in pairs(entries) do
+                Spoofer.BinderDestroy(binder)
+            end
+            Spoofer.Binders[player] = nil
+        end
+
+        function Spoofer.Refresh()
+            Spoofer.Start()
+            for _, player in ipairs(Players:GetPlayers()) do
+                Spoofer.Apply(player)
+            end
+        end
+
+        function Spoofer.Start()
+            if Spoofer.Started then return end
+            Spoofer.Started = true
+            table.insert(Spoofer.Connections, Players.PlayerAdded:Connect(function(player)
+                Spoofer.Apply(player)
+            end))
+            table.insert(Spoofer.Connections, Players.PlayerRemoving:Connect(function(player)
+                Spoofer.Cleanup(player)
+            end))
+        end
+
+        function Spoofer.Destroy()
+            for _, connection in ipairs(Spoofer.Connections) do
+                pcall(function() connection:Disconnect() end)
+            end
+            Spoofer.Connections = {}
+            Spoofer.Started = false
+            for player in pairs(Spoofer.Binders) do
+                Spoofer.Cleanup(player)
+            end
+        end
+
+        local deflecting = {}
+        local function is_deflecting(plr) return deflecting[plr] end
+        local function has_riot(plr) return workspace.ViewModels:FindFirstChild(plr.Name .. " - Riot Shield - Riot Shield") ~= nil end
+        local function check_wall(part)
+            local ray = Ray.new(camera.CFrame.Position, part.Position - camera.CFrame.Position)
+            local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, part.Parent})
+            return not hit
+        end
+
+        if katana and katana._StartDeflecting then
+            local old = katana._StartDeflecting
+            katana._StartDeflecting = function(...)
+                local args = {...}
+                local fighter = args[1].ClientFighter
+                local player = fighter and fighter.Player
+                if player then
+                    deflecting[player] = true
+                    task.delay(args[1].Info.DeflectDuration or 0.1, function() deflecting[player] = false end)
+                end
+                return old(table.unpack(args))
+            end
+        end
+
+        local function getclosest(fov)
+            local closest = ELI.targeting.max_distance
+            local player
+            local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+            for _, v in Players:GetPlayers() do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild(ELI.targeting.part) then
+                    local hum = v.Character:FindFirstChildOfClass("Humanoid")
+                    if not hum or hum.Health <= 0 then continue end
+                    if is_deflecting(v) then continue end
+                    if v:GetAttribute('TeamID') == LocalPlayer:GetAttribute('TeamID') then continue end
+                    if ELI.targeting.visible_only and not check_wall(v.Character[ELI.targeting.part]) then continue end
+                    if ELI.silent_aim.riot_shield and has_riot(v) then continue end
+                    local pos, on = camera:WorldToViewportPoint(v.Character[ELI.targeting.part].Position)
+                    if on then
+                        local d = (center - Vector2.new(pos.X, pos.Y)).Magnitude
+                        if d < closest and d <= fov then player = v; closest = d end
+                    end
+                end
+            end
+            return player
+        end
+
+        local ch_gui, ch_lines, ch_dot, dmg_gui, mblur
+
+        local function ensure_dmggui()
+            if dmg_gui then return end
+            dmg_gui = Instance.new("ScreenGui")
+            dmg_gui.Name = "SeahookDmg"; dmg_gui.ResetOnSpawn = false; dmg_gui.IgnoreGuiInset = true
+            dmg_gui.DisplayOrder = 500; dmg_gui.Parent = CoreGuiRef
+        end
+
+        local function ensure_crosshair()
+            if ch_gui then return end
+            ch_gui = Instance.new("ScreenGui")
+            ch_gui.Name = "SeahookCrosshair"; ch_gui.ResetOnSpawn = false; ch_gui.IgnoreGuiInset = true
+            ch_gui.DisplayOrder = 999; ch_gui.Parent = CoreGuiRef
+            ch_lines = {}
+            for i = 1, 4 do
+                local l = Instance.new("Frame")
+                l.BackgroundColor3 = Color3.fromRGB(0, 255, 170); l.BorderSizePixel = 0
+                l.AnchorPoint = Vector2.new(0.5, 0.5); l.Visible = false; l.ZIndex = 2
+                l.Parent = ch_gui; ch_lines[i] = l
+            end
+            ch_dot = Instance.new("Frame")
+            ch_dot.Size = UDim2.fromOffset(3, 3); ch_dot.AnchorPoint = Vector2.new(0.5, 0.5)
+            ch_dot.BorderSizePixel = 0; ch_dot.BackgroundColor3 = Color3.fromRGB(0, 255, 170)
+            ch_dot.Visible = false; ch_dot.Parent = ch_gui
+        end
+
+        local function ensure_mblur()
+            if mblur then return end
+            mblur = Instance.new("BlurEffect")
+            mblur.Name = "SeahookMotionBlur"; mblur.Size = 0; mblur.Enabled = false
+            mblur.Parent = Lighting
+        end
+
+        local hitsound_dir = {
+            ["windows xp"]="rbxassetid://108009100115241",["minecraft bow"]="rbxassetid://3442683707",
+            ["neverlose"]="rbxassetid://97643101798871",["steve"]="rbxassetid://132883456216684",
+            ["among us"]="rbxassetid://93866204681438",["bonk"]="rbxassetid://5766898159",
+            ["rust"]="rbxassetid://1255040462",["fatality"]="rbxassetid://6534947869",
+            ["hitmarker"]="rbxassetid://133749572213659",["csgo"]="rbxassetid://5764885315",
+        }
+
+        local hitsound_sound = Instance.new("Sound")
+        hitsound_sound.Name = "SeahookHitSound"; hitsound_sound.Volume = 1
+        hitsound_sound.Parent = SoundService
+
+        local fired_targets = {}
+        local last_notify_per_target = {}
+
+        local function is_headshot_for(target)
+            local char = target and target.Character
+            if not char then return false end
+            local head = char:FindFirstChild("Head")
+            if not head then return false end
+            local sp, on = camera:WorldToViewportPoint(head.Position)
+            if not on then return false end
+            local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+            return (center - Vector2.new(sp.X, sp.Y)).Magnitude < 30
+        end
+
+        local function on_local_hit(target_player, damage, is_head)
+            local now = tick()
+            if last_notify_per_target[target_player] and now - last_notify_per_target[target_player] < 0.15 then return end
+            last_notify_per_target[target_player] = now
+
+            if ELI.visuals.damage_numbers.enable then
+                ensure_dmggui()
+                local char = target_player and target_player.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    local pos = root.Position + Vector3.new(0, is_head and 2.6 or 2.1, 0)
+                    local sp, onscreen = camera:WorldToViewportPoint(pos)
+                    if onscreen then
+                        local cfg = ELI.visuals.damage_numbers
+                        local lbl = Instance.new("TextLabel")
+                        lbl.BackgroundTransparency = 1
+                        lbl.Size = UDim2.fromOffset(140, 26); lbl.AnchorPoint = Vector2.new(0.5, 0.5)
+                        lbl.Position = UDim2.fromOffset(sp.X, sp.Y)
+                        lbl.Font = Enum.Font[cfg.font] or Enum.Font.GothamBold
+                        lbl.TextSize = cfg.text_size or 18
+                        lbl.Text = "-" .. tostring(math.floor(damage + 0.5))
+                        lbl.TextStrokeTransparency = 1; lbl.TextColor3 = cfg.color1
+                        lbl.ZIndex = 10; lbl.Parent = dmg_gui
+                        local stroke = Instance.new("UIStroke", lbl)
+                        stroke.Thickness = 1.5; stroke.Color = Color3.new(0, 0, 0)
+                        stroke.Transparency = 0.15
+                        local scale = Instance.new("UIScale", lbl); scale.Scale = 0.5
+                        if cfg.color_type == "Gradient" then
+                            local grad = Instance.new("UIGradient", lbl)
+                            grad.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, cfg.color1), ColorSequenceKeypoint.new(1, cfg.color2)})
+                            grad.Rotation = 90; lbl.TextColor3 = Color3.new(1,1,1)
+                        end
+                        local startX, startY = sp.X, sp.Y
+                        local jitter = math.random(-14, 14)
+                        local start = tick()
+                        local dur = cfg.duration or 0.8
+                        local rise = cfg.rise or 42
+                        local conn
+                        conn = RunService.RenderStepped:Connect(function()
+                            local t = (tick() - start) / dur
+                            if t >= 1 then conn:Disconnect(); pcall(function() lbl:Destroy() end); return end
+                            local ease = 1 - (1-t)*(1-t)*(1-t)
+                            if cfg.color_type == "Rainbow" then lbl.TextColor3 = Color3.fromHSV((tick() * 0.6) % 1, 0.75, 1) end
+                            local s = t < 0.16 and (0.5 + (t/0.16)*0.62) or (1.12 - ((t-0.16)/0.84)*0.12)
+                            scale.Scale = s
+                            local fade = t < 0.55 and 0 or (t - 0.55)/0.45
+                            lbl.Position = UDim2.fromOffset(startX + jitter * ease, startY - rise * ease)
+                            lbl.TextTransparency = fade
+                            stroke.Transparency = 0.15 + 0.85 * fade
+                        end)
+                    end
+                end
+            end
+
+            if ELI.visuals.hit_notify.enable then
+                local msg = ELI.visuals.hit_notify.msg or "hit {target} for {damage}"
+                msg = msg:gsub("{target}", target_player and target_player.Name or "?")
+                         :gsub("{damage}", tostring(math.floor(damage + 0.5)))
+                if is_head then msg = msg .. " (headshot)" end
+                task.spawn(function()
+                    pcall(function()
+                        Library:Notify({ Title = "Hit", Description = msg, Time = ELI.visuals.hit_notify.duration or 3 })
+                    end)
+                end)
+            end
+
+            if ELI.visuals.hitsound.enable then
+                local snd_id = hitsound_dir[ELI.visuals.hitsound.selected]
+                if snd_id then
+                    task.spawn(function()
+                        pcall(function()
+                            hitsound_sound.SoundId = snd_id
+                            hitsound_sound.Volume = ELI.visuals.hitsound.volume or 1
+                            hitsound_sound.PlaybackSpeed = ELI.visuals.hitsound.pitch or 1
+                            hitsound_sound.TimePosition = 0
+                            hitsound_sound:Play()
+                        end)
+                    end)
+                end
+            end
+        end
+
+        local function watch_damage()
+            local now = tick()
+            for plr, data in pairs(fired_targets) do
+                if now - data.time > 1.2 then fired_targets[plr] = nil; continue end
+                local char = plr.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 then
+                    local diff = data.hp - hum.Health
+                    if diff > 0.5 then
+                        data.headshot = is_headshot_for(plr)
+                        on_local_hit(plr, diff, data.headshot)
+                        fired_targets[plr] = nil
+                    else
+                        data.hp = hum.Health
+                    end
+                elseif not char then
+                    fired_targets[plr] = nil
+                end
+            end
+        end
+
+        if gun and gun.StartShooting then
+            local old = gun.StartShooting
+            gun.StartShooting = function(controller, is_empty, debounce)
+                local client_fighter = controller.ClientFighter
+                if not client_fighter.IsLocalPlayer then return old(controller, is_empty, debounce) end
+                if not is_empty and controller:Get("Ammo") <= 0 then return false end
+                local shoot_result = {old(controller, is_empty, debounce)}
+                if client_fighter.EquippedItem and ELI.guns.no_spread then shoot_result[4] = true end
+                if ELI.visuals.hit_notify.enable or ELI.visuals.hitsound.enable or ELI.visuals.damage_numbers.enable then
+                    for _, v in Players:GetPlayers() do
+                        if v ~= LocalPlayer and v.Character then
+                            local hum = v.Character:FindFirstChildOfClass("Humanoid")
+                            local root = v.Character:FindFirstChild("HumanoidRootPart")
+                            if hum and hum.Health > 0 and root then
+                                if v:GetAttribute('TeamID') ~= LocalPlayer:GetAttribute('TeamID') then
+                                    local pos, on = camera:WorldToViewportPoint(root.Position)
+                                    if on then
+                                        local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                                        if (center - Vector2.new(pos.X, pos.Y)).Magnitude <= ELI.silent_aim.fov_radius then
+                                            fired_targets[v] = { time = tick(), hp = hum.Health, headshot = false }
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                return unpack(shoot_result)
+            end
+        end
+
+        if utility and utility.PlayParticles then
+            local old_muzzle = utility.PlayParticles
+            utility.PlayParticles = function(s, p)
+                if ELI.guns.no_muzzle_flash and p.Name == "_muzzle" then return end
+                return old_muzzle(s, p)
+            end
+        end
+
+        if utility and utility.Raycast then
+            local old_raycast = utility.Raycast
+            utility.Raycast = function(...)
+                if ELI.silent_aim.enable then
+                    local ok2, caller = pcall(function() return debug.info(3, "n") end)
+                    if ok2 and caller == "StartShooting" and math.random(1, 100) <= ELI.silent_aim.hit_chance then
+                        local closest = getclosest(ELI.silent_aim.fov_radius)
+                        if closest and closest.Character then
+                            local char = closest.Character
+                            local aim_part = char:FindFirstChild(ELI.targeting.part)
+                                or char:FindFirstChild("HitboxHead")
+                                or char:FindFirstChild("Head")
+                                or char:FindFirstChild("HumanoidRootPart")
+                            if aim_part then
+                                local args = {...}
+                                args[3] = aim_part.Position
+                                return old_raycast(table.unpack(args))
+                            end
+                        end
+                    end
+                end
+                return old_raycast(...)
+            end
+        end
+
+        local jump_conn = nil
+        local function enableInfiniteJump()
+            if jump_conn then return end
+            jump_conn = UIS.JumpRequest:Connect(function()
+                if not ELI.character.infinite_double_jump then return end
+                local char = LocalPlayer.Character
+                if not char then return end
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end) end
+            end)
+        end
+        local function disableInfiniteJump()
+            if jump_conn then jump_conn:Disconnect(); jump_conn = nil end
+        end
+
+        -- ANTI AIM
+        local antiaim_root_angle = 0
+        local antiaim_arm_angle = 0
+        local antiaim_original = nil
+
+        local function installAntiAim()
+            if antiaim_original then return end
+            antiaim_original = {}
+            if mechanics_controller and mechanics_controller._UpdateCharacterRotation then
+                pcall(function()
+                    antiaim_original.update_rotation = mechanics_controller._UpdateCharacterRotation
+                    mechanics_controller._UpdateCharacterRotation = function(Self, ...)
+                        if ELI.antiaim.enable then
+                            if Self.IsSliding or (Self.IsAlive and not Self:IsAlive()) then
+                                return antiaim_original.update_rotation(Self, ...)
+                            end
+                            local Entity = Self.LocalFighter and Self.LocalFighter.Entity
+                            if not Entity then return antiaim_original.update_rotation(Self, ...) end
+                            local RootPart = Entity.RootPart
+                            local Humanoid = Entity.Humanoid
+                            if not RootPart or not Humanoid then return antiaim_original.update_rotation(Self, ...) end
+                            Humanoid.AutoRotate = true
+                            pcall(function()
+                                RootPart.CFrame = RootPart.CFrame * CFrame.Angles(0, math.rad(antiaim_root_angle), 0)
+                            end)
+                            antiaim_root_angle = (antiaim_root_angle + ELI.antiaim.speed) % 360
+                            return
+                        end
+                        return antiaim_original.update_rotation(Self, ...)
+                    end
+                end)
+            end
+            if utility and utility.EncodeCameraRotation then
+                pcall(function()
+                    antiaim_original.encode_camera = utility.EncodeCameraRotation
+                    utility.EncodeCameraRotation = function(Self, Rotation, ...)
+                        if ELI.antiaim.enable then
+                            if ELI.antiaim.arm_spin then
+                                antiaim_arm_angle = (antiaim_arm_angle + (ELI.antiaim.speed * 0.005)) % math.pi
+                            end
+                            Rotation = Vector2.new(ELI.antiaim.pitch, antiaim_arm_angle)
+                        end
+                        return antiaim_original.encode_camera(Self, Rotation, ...)
+                    end
+                end)
+            end
+        end
+
+        local function uninstallAntiAim()
+            if not antiaim_original then return end
+            pcall(function()
+                if antiaim_original.update_rotation and mechanics_controller then
+                    mechanics_controller._UpdateCharacterRotation = antiaim_original.update_rotation
+                end
+            end)
+            pcall(function()
+                if antiaim_original.encode_camera and utility then
+                    utility.EncodeCameraRotation = antiaim_original.encode_camera
+                end
+            end)
+            antiaim_original = nil
+        end
+
+        -- VIEWMODEL CHAMS
+        local vm_weapon_highlights = {}
+        local vm_arm_highlights = {}
+        local vm_saved_transparency = {}
+
+        local function clear_viewmodel_chams()
+            for part, hl in pairs(vm_weapon_highlights) do pcall(function() hl:Destroy() end) end
+            for part, hl in pairs(vm_arm_highlights) do pcall(function() hl:Destroy() end) end
+            for obj, data in pairs(vm_saved_transparency) do
+                pcall(function()
+                    if obj.Parent then
+                        if obj:IsA("BasePart") then
+                            if data.t then obj.Transparency = data.t end
+                            if data.ltm then obj.LocalTransparencyModifier = data.ltm end
+                            obj.CastShadow = true
+                        elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                            if data.t then obj.Transparency = data.t end
+                        end
+                    end
+                end)
+            end
+            vm_weapon_highlights = {}
+            vm_arm_highlights = {}
+            vm_saved_transparency = {}
+        end
+
+        local function is_arm_part(part)
+            local n = string.lower(part.Name)
+            if n:find("arm") or n:find("hand") or n:find("sleeve") or n:find("elbow") or n:find("wrist") or n:find("shoulder") then return true end
+            local anc = part.Parent
+            while anc and anc ~= workspace do
+                local an = string.lower(anc.Name)
+                if an:find("arm") or an:find("rig") then return true end
+                anc = anc.Parent
+            end
+            return false
+        end
+
+        -- RAGEBOT
+        local rage_slots = { Primary = 1, Secondary = 2, Melee = 3 }
+        local rage_lastFire = 0
+        local rage_deflecting = {}
+        local rage_restore_cf, rage_restore_vel, rage_restore_root
+        local rage_bound_restore = false
+
+        local function rage_getSlotNumber() return rage_slots[ELI.ragebot.WeaponSlot] or 3 end
+        local function rage_initialEquip()
+            if not fighter_controller then return end
+            local lf = fighter_controller.LocalFighter
+            if lf and LocalPlayer.Character then pcall(function() lf:EquipItem(rage_getSlotNumber()) end) end
+        end
+
+        Players.PlayerRemoving:Connect(function(player)
+            rage_deflecting[player] = nil
+            fired_targets[player] = nil
+            last_notify_per_target[player] = nil
+        end)
+
+        local function rage_isEnemy(player)
+            if player == LocalPlayer then return false end
+            local duel = spectate_controller and spectate_controller.CurrentDuelSubject
+            local localDueler = duel and duel:GetDueler(LocalPlayer)
+            local localTeam = localDueler and localDueler:Get("TeamID")
+            if localTeam and duel and duel.Duelers then
+                for _, dueler in duel.Duelers do
+                    if dueler.Player == player then return dueler:Get("TeamID") ~= localTeam end
+                end
+            end
+            local pTeam = player:GetAttribute("TeamID")
+            local lTeam = LocalPlayer:GetAttribute("TeamID")
+            if pTeam and lTeam then return pTeam ~= lTeam end
+            return true
+        end
+
+        local function rage_getClosestTarget()
+            local char = LocalPlayer.Character
+            if not char then return nil, nil, nil end
+            local myRoot = char:FindFirstChild("HumanoidRootPart")
+            if not myRoot then return nil, nil, nil end
+            local closestPlayer, closestRoot, closestHead, closestDist = nil, nil, nil, 500
+            for _, player in Players:GetPlayers() do
+                if not rage_isEnemy(player) then continue end
+                local pChar = player.Character
+                if not pChar then continue end
+                local pRoot = pChar:FindFirstChild("HumanoidRootPart")
+                local pHead = pChar:FindFirstChild("Head")
+                local pHum = pChar:FindFirstChildWhichIsA("Humanoid")
+                if not (pRoot and pHead and pHum and pHum.Health > 0) then continue end
+                local dist = (myRoot.Position - pRoot.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist; closestPlayer = player; closestRoot = pRoot; closestHead = pHead
+                end
+            end
+            return closestPlayer, closestRoot, closestHead
+        end
+
+        local function rage_cleanup()
+            if rage_bound_restore and rage_restore_root then
+                pcall(function() RunService:UnbindFromRenderStep("__rage_restore") end)
+                rage_bound_restore = false
+            end
+            if rage_restore_root then
+                pcall(function()
+                    if rage_restore_cf then rage_restore_root.CFrame = rage_restore_cf end
+                    if rage_restore_vel then rage_restore_root.Velocity = rage_restore_vel end
+                end)
+            end
+            rage_restore_root = nil; rage_restore_cf = nil; rage_restore_vel = nil
+            rage_lastFire = 0
+        end
+
+        -- EMOTES (trimmed to 15)
+        local emotes = {
+            ["Meditate"] = "96579993895076",
+            ["Orbit"] = "133811691098518",
+            ["Floss"] = "72174079036035",
+            ["Take the L"] = "112884830175040",
+            ["Hype"] = "80055417516516",
+            ["Dab"] = "248263260",
+            ["Default Dance"] = "182435998",
+            ["Gangnam Style"] = "5021615145",
+            ["Macarena"] = "1369164203",
+            ["Robot"] = "148840371",
+            ["Boneless"] = "5918726674",
+            ["Backflip"] = "302315191",
+            ["Spongebob"] = "5646052696",
+            ["Moonwalk"] = "12455390658",
+            ["Laugh"] = "180238151",
+        }
+
+        local game_animations = {}
+        task.spawn(function()
+            task.wait(3)
+            for _, d in ipairs(game:GetDescendants()) do
+                if d:IsA("Animation") and d.AnimationId and d.AnimationId ~= "" then
+                    local nm = d.Name
+                    if nm and nm ~= "" and not game_animations[nm] then game_animations[nm] = d.AnimationId end
+                end
+            end
+        end)
+
+        local emote_playing, emote_last_id, emote_last_speed, emote_fallback_used = nil, "", 0, false
+
+        local function emote_stop()
+            if emote_playing then pcall(function() emote_playing:Stop() end); emote_playing = nil end
+            emote_last_id = ""; emote_fallback_used = false
+        end
+
+        local function clean_id(id)
+            id = tostring(id)
+            id = id:gsub("^rbxassetid://", ""):gsub("^rbxasset://", ""):gsub("^https?://.+id=", ""):gsub("%?.*$", "")
+            return id
+        end
+
+        local function try_load_emote(animator, id)
+            local anim
+            local okObjects, objects = pcall(function() return game:GetObjects("rbxassetid://" .. id) end)
+            if okObjects and objects and objects[1] and objects[1]:IsA("Animation") then anim = objects[1]
+            else anim = Instance.new("Animation"); anim.AnimationId = "rbxassetid://" .. id end
+            local okLoad, track = pcall(function() return animator:LoadAnimation(anim) end)
+            if not okLoad or not track then return nil end
+            local okPlay = pcall(function() track.Priority = Enum.AnimationPriority.Action4; track.Looped = true; track:Play() end)
+            if not okPlay then pcall(function() track:Stop() end); return nil end
+            task.wait(0.15)
+            if not track.IsPlaying then pcall(function() track:Stop() end); return nil end
+            return track
+        end
+
+        local function emote_tick()
+            local cfg = ELI.character.emote
+            if not cfg.enable then if emote_playing then emote_stop() end return end
+            local char = LocalPlayer.Character
+            if not char then emote_stop(); return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum then emote_stop(); return end
+            local animator = hum:FindFirstChildOfClass("Animator")
+            if not animator then emote_stop(); return end
+            if emote_playing and not emote_playing.IsPlaying then emote_playing = nil; emote_last_id = "" end
+            local selected = cfg.custom_id ~= "" and cfg.custom_id or emotes[cfg.selected]
+            if not selected or selected == "" then return end
+            if selected ~= emote_last_id then
+                if emote_playing then pcall(function() emote_playing:Stop() end); emote_playing = nil end
+                emote_last_id = selected
+                local track = try_load_emote(animator, clean_id(selected))
+                if not track and not emote_fallback_used then
+                    emote_fallback_used = true
+                    for name, id in pairs(game_animations) do
+                        local fid = clean_id(id)
+                        if fid ~= "" then
+                            track = try_load_emote(animator, fid)
+                            if track then
+                                task.spawn(function()
+                                    pcall(function() Library:Notify({ Title = "Emote", Description = "using game emote: " .. name, Time = 3 }) end)
+                                end)
+                                break
+                            end
+                        end
+                    end
+                end
+                if not track then emote_last_id = ""; return end
+                emote_playing = track
+                pcall(function() emote_playing:AdjustSpeed(cfg.speed) end)
+                emote_last_speed = cfg.speed
+            end
+            if emote_playing and cfg.speed ~= emote_last_speed then
+                pcall(function() emote_playing:AdjustSpeed(cfg.speed) end)
+                emote_last_speed = cfg.speed
+            end
+        end
+
+        -- CHAMS + TRAJECTORY
+        local chams_highlights = {}
+        local chams_last = 0
+        local traj_pool, traj_folder = {}, nil
+        local function traj_getpart(i)
+            if not traj_folder then
+                traj_folder = Instance.new("Folder")
+                traj_folder.Name = "SeahookTrajectory"; traj_folder.Parent = workspace
+            end
+            local p = traj_pool[i]
+            if p and p.Parent then return p end
+            p = Instance.new("Part"); p.Anchored = true; p.CanCollide = false
+            p.CanQuery = false; p.CanTouch = false; p.Shape = Enum.PartType.Ball
+            p.Size = Vector3.new(0.4, 0.4, 0.4); p.Material = Enum.Material.Neon
+            p.Parent = traj_folder; traj_pool[i] = p
+            return p
+        end
+        local throwables = {
+            ["grenade"]=true,["molotov"]=true,["flashbang"]=true,["smoke grenade"]=true,
+            ["satchel"]=true,["jump pad"]=true,["war horn"]=true,["flare gun"]=true,["subspace tripmine"]=true,
+        }
+
+        -- WORLD (trimmed skybox list)
+        local world_original = {
+            fog_color=Lighting.FogColor, fog_start=Lighting.FogStart, fog_end=Lighting.FogEnd,
+            ambient=Lighting.Ambient, clock_time=Lighting.ClockTime,
+            brightness=Lighting.Brightness, exposure=Lighting.ExposureCompensation,
+            color_shift_top=Lighting.ColorShift_Top, color_shift_bottom=Lighting.ColorShift_Bottom,
+        }
+
+        local world_shaders = {}
+        world_shaders.blur = Instance.new("BlurEffect"); world_shaders.blur.Name = "SeahookBlur"; world_shaders.blur.Enabled = false; world_shaders.blur.Size = 12; world_shaders.blur.Parent = Lighting
+        world_shaders.bloom = Instance.new("BloomEffect"); world_shaders.bloom.Name = "SeahookBloom"; world_shaders.bloom.Enabled = false; world_shaders.bloom.Intensity = 1; world_shaders.bloom.Size = 24; world_shaders.bloom.Threshold = 0.9; world_shaders.bloom.Parent = Lighting
+        world_shaders.dof = Instance.new("DepthOfFieldEffect"); world_shaders.dof.Name = "SeahookDoF"; world_shaders.dof.Enabled = false; world_shaders.dof.FocusDistance = 25; world_shaders.dof.NearIntensity = 0.15; world_shaders.dof.FarIntensity = 0.15; world_shaders.dof.Parent = Lighting
+        world_shaders.sunrays = Instance.new("SunRaysEffect"); world_shaders.sunrays.Name = "SeahookSunRays"; world_shaders.sunrays.Enabled = false; world_shaders.sunrays.Intensity = 0.25; world_shaders.sunrays.Spread = 1; world_shaders.sunrays.Parent = Lighting
+        world_shaders.cc = Instance.new("ColorCorrectionEffect"); world_shaders.cc.Name = "SeahookCC"; world_shaders.cc.Enabled = false; world_shaders.cc.Saturation = 0; world_shaders.cc.Contrast = 0; world_shaders.cc.TintColor = Color3.fromRGB(255,255,255); world_shaders.cc.Parent = Lighting
+
+        local skybox_list = {
+            ["Deep Space"]={Bk="http://www.roblox.com/asset/?id=159248188",Dn="http://www.roblox.com/asset/?id=159248183",Ft="http://www.roblox.com/asset/?id=159248187",Lf="http://www.roblox.com/asset/?id=159248173",Rt="http://www.roblox.com/asset/?id=159248192",Up="http://www.roblox.com/asset/?id=159248176"},
+            ["Purple Nebula"]={Bk="http://www.roblox.com/asset/?id=159454299",Dn="http://www.roblox.com/asset/?id=159454296",Ft="http://www.roblox.com/asset/?id=159454293",Lf="http://www.roblox.com/asset/?id=159454286",Rt="http://www.roblox.com/asset/?id=159454300",Up="http://www.roblox.com/asset/?id=159454288"},
+            ["Vaporwave"]={Bk="http://www.roblox.com/asset/?id=1417494030",Dn="http://www.roblox.com/asset/?id=1417494146",Ft="http://www.roblox.com/asset/?id=1417494253",Lf="http://www.roblox.com/asset/?id=1417494402",Rt="http://www.roblox.com/asset/?id=1417494499",Up="http://www.roblox.com/asset/?id=1417494643"},
+            ["Night"]={Bk="rbxassetid://12064107",Dn="rbxassetid://12064152",Ft="rbxassetid://12064121",Lf="rbxassetid://12063984",Rt="rbxassetid://12064115",Up="rbxassetid://12064131"},
+            ["Clouds"]={Bk="rbxassetid://570557514",Dn="rbxassetid://570557775",Ft="rbxassetid://570557559",Lf="rbxassetid://570557620",Rt="rbxassetid://570557672",Up="rbxassetid://570557727"},
+            ["Anime"]={Bk="rbxassetid://7643700666",Dn="rbxassetid://7643743687",Ft="rbxassetid://7644304186",Lf="rbxassetid://7644288724",Rt="rbxassetid://7643700819",Up="rbxassetid://7643757404"},
+            ["Minecraft"]={Bk="rbxassetid://1876545003",Dn="rbxassetid://1876544331",Ft="rbxassetid://1876542941",Lf="rbxassetid://1876543392",Rt="rbxassetid://1876543764",Up="rbxassetid://1876544642"},
+            ["Space"]={Bk="rbxassetid://149397692",Dn="rbxassetid://149397686",Ft="rbxassetid://149397697",Lf="rbxassetid://149397684",Rt="rbxassetid://149397688",Up="rbxassetid://149397702"},
+            ["Sunset"]={Bk="rbxassetid://150939022",Dn="rbxassetid://150939038",Ft="rbxassetid://150939047",Lf="rbxassetid://150939056",Rt="rbxassetid://150939063",Up="rbxassetid://150939082"},
+            ["Starry Night"]={Bk="rbxassetid://8291078911",Dn="rbxassetid://8291077403",Ft="rbxassetid://8291081613",Lf="rbxassetid://8291074004",Rt="rbxassetid://8291080353",Up="rbxassetid://8291075054"},
+        }
+        local skybox_names = {}
+        for k in pairs(skybox_list) do table.insert(skybox_names, k) end
+        table.sort(skybox_names)
+
+        local current_sky_instance = Lighting:FindFirstChildOfClass("Sky")
+        local original_sky_clone = current_sky_instance and current_sky_instance:Clone() or nil
+        local skybox_state = { rotate_tick = 0, original_orientation = nil }
+
+        local atmosphere_instance = Lighting:FindFirstChildOfClass("Atmosphere")
+        local original_atmosphere = atmosphere_instance and atmosphere_instance:Clone() or nil
+        if not atmosphere_instance then atmosphere_instance = Instance.new("Atmosphere"); atmosphere_instance.Parent = Lighting end
+
+        local function apply_skybox()
+            local cfg = ELI.world.skybox
+            for _, v in next, Lighting:GetChildren() do if v:IsA("Sky") then v:Destroy() end end
+            if cfg.enable then
+                local data = skybox_list[cfg.selected]
+                if data then
+                    local sky = Instance.new("Sky")
+                    sky.SkyboxBk = data.Bk; sky.SkyboxDn = data.Dn; sky.SkyboxFt = data.Ft
+                    sky.SkyboxLf = data.Lf; sky.SkyboxRt = data.Rt; sky.SkyboxUp = data.Up
+                    if cfg.remove_sun then sky.SunTextureId = "" end
+                    if cfg.remove_moon then sky.MoonTextureId = "" end
+                    if cfg.remove_stars then sky.StarCount = 0 end
+                    sky.Parent = Lighting
+                end
+            elseif original_sky_clone then
+                original_sky_clone:Clone().Parent = Lighting
+            end
+        end
+
+        local auto_queue_clicked = false
+
+        -- HEARTBEAT
+        local last_rage_equip, last_ws, last_chams, last_misc_tick, last_emote_tick, last_vm_tick, last_world_tick = 0,0,0,0,0,0,0
+        local last_device_stamp, last_tp_stamp, last_noclip_stamp = 0,0,0
+        local last_rapid_fire = 0
+        local rage_cleaned = false
+
+        RunService.Heartbeat:Connect(function(dt)
+            local now = tick()
+            watch_damage()
+
+            if now - last_emote_tick > 0.2 then last_emote_tick = now; emote_tick() end
+
+            if not _G.SeahookACScan then
+                _G.SeahookACScan = true
+                local ac_words = {"anticheat","detection","security","moderation"}
+                local function check(obj)
+                    if obj:IsA("LocalScript") or obj:IsA("ModuleScript") then
+                        local n = string.lower(obj.Name)
+                        for _, w in ipairs(ac_words) do
+                            if string.find(n, w, 1, true) then pcall(function() obj.Disabled = true end); break end
+                        end
+                    end
+                end
+                pcall(function()
+                    game.DescendantAdded:Connect(function(obj) pcall(check, obj) end)
+                    local list = game:GetDescendants()
+                    for i = 1, #list do pcall(check, list[i]); if i % 4000 == 0 then task.wait() end end
+                end)
+            end
+
+            if now - last_world_tick > 0.05 then
+                last_world_tick = now
+                local W = ELI.world
+                if W.fog.enable then Lighting.FogColor = W.fog.color; Lighting.FogStart = W.fog.start; Lighting.FogEnd = W.fog.finish end
+                if W.ambient.enable then Lighting.Ambient = W.ambient.color end
+                if W.clock.enable then Lighting.ClockTime = W.clock.time end
+                if W.brightness.enable then Lighting.Brightness = W.brightness.level end
+                if W.exposure.enable then Lighting.ExposureCompensation = W.exposure.level end
+                if W.color_shift_top.enable then Lighting.ColorShift_Top = W.color_shift_top.color end
+                if W.color_shift_bottom.enable then Lighting.ColorShift_Bottom = W.color_shift_bottom.color end
+
+                local sky = Lighting:FindFirstChildOfClass("Sky")
+                if W.skybox.rotate and sky then
+                    if not skybox_state.original_orientation then skybox_state.original_orientation = sky.SkyboxOrientation end
+                    skybox_state.rotate_tick = skybox_state.rotate_tick + dt * W.skybox.rotate_speed * 0.5
+                    local angle = 0
+                    if W.skybox.rotate_method == "Spin" then angle = (skybox_state.rotate_tick * 20) % 360
+                    elseif W.skybox.rotate_method == "Wave" then angle = math.sin(skybox_state.rotate_tick) * 180
+                    elseif W.skybox.rotate_method == "Alternate" then angle = math.abs((skybox_state.rotate_tick * 40 % 720) - 360) - 180 end
+                    local rot = Vector3.new(0, 0, 0)
+                    if W.skybox.rotate_direction == "Horizontal" then rot = Vector3.new(0, angle, 0)
+                    elseif W.skybox.rotate_direction == "Vertical" then rot = Vector3.new(angle, 0, 0)
+                    elseif W.skybox.rotate_direction == "Diagonal" then rot = Vector3.new(angle, angle, angle) end
+                    pcall(function() sky.SkyboxOrientation = rot end)
+                elseif not W.skybox.rotate and sky and skybox_state.original_orientation then
+                    pcall(function() sky.SkyboxOrientation = skybox_state.original_orientation end)
+                    skybox_state.original_orientation = nil; skybox_state.rotate_tick = 0
+                end
+
+                if atmosphere_instance and W.atmosphere.enable then
+                    atmosphere_instance.Density = W.atmosphere.density
+                    atmosphere_instance.Offset = W.atmosphere.offset
+                    atmosphere_instance.Glare = W.atmosphere.glare
+                    atmosphere_instance.Haze = W.atmosphere.haze
+                    atmosphere_instance.Color = W.atmosphere.color
+                    atmosphere_instance.Decay = W.atmosphere.decay
+                    if not atmosphere_instance.Parent then atmosphere_instance.Parent = Lighting end
+                end
+            end
+
+            if now - last_vm_tick > 1/30 then
+                last_vm_tick = now
+                local cfg = ELI.visuals.viewmodel
+                local viewmodels = workspace:FindFirstChild("ViewModels")
+                local first_person = viewmodels and viewmodels:FindFirstChild("FirstPerson")
+                local any_on = cfg.weapon_chams.enable or cfg.arm_chams.enable or cfg.arm_chams.invisible
+                if any_on and first_person then
+                    local current_w, current_a = {}, {}
+                    for _, part in next, first_person:GetDescendants() do
+                        if part:IsA("BasePart") then
+                            local is_arm = is_arm_part(part)
+                            if is_arm then
+                                if cfg.arm_chams.invisible then
+                                    if vm_saved_transparency[part] == nil then vm_saved_transparency[part] = { t = part.Transparency, ltm = part.LocalTransparencyModifier } end
+                                    pcall(function() part.Transparency = 1; part.LocalTransparencyModifier = 1; part.CastShadow = false end)
+                                    for _, d in next, part:GetChildren() do
+                                        if d:IsA("Decal") or d:IsA("Texture") then
+                                            if vm_saved_transparency[d] == nil then vm_saved_transparency[d] = { t = d.Transparency } end
+                                            pcall(function() d.Transparency = 1 end)
+                                        end
+                                    end
+                                end
+                                if cfg.arm_chams.enable then
+                                    current_a[part] = true
+                                    if not vm_arm_highlights[part] or not vm_arm_highlights[part].Parent then
+                                        local hl = Instance.new("Highlight"); hl.Name = "SeahookVMArm"; hl.Adornee = part
+                                        hl.DepthMode = cfg.arm_chams.depth == "AlwaysOnTop" and Enum.HighlightDepthMode.AlwaysOnTop or Enum.HighlightDepthMode.Occluded
+                                        hl.Parent = part; vm_arm_highlights[part] = hl
+                                    end
+                                    local hl = vm_arm_highlights[part]
+                                    hl.FillColor = cfg.arm_chams.color; hl.FillTransparency = cfg.arm_chams.transparency
+                                    hl.OutlineColor = cfg.arm_chams.color; hl.OutlineTransparency = cfg.arm_chams.outline_transparency
+                                    hl.Enabled = true
+                                end
+                            else
+                                if cfg.weapon_chams.enable then
+                                    current_w[part] = true
+                                    if not vm_weapon_highlights[part] or not vm_weapon_highlights[part].Parent then
+                                        local hl = Instance.new("Highlight"); hl.Name = "SeahookVMWeapon"; hl.Adornee = part
+                                        hl.DepthMode = cfg.weapon_chams.depth == "AlwaysOnTop" and Enum.HighlightDepthMode.AlwaysOnTop or Enum.HighlightDepthMode.Occluded
+                                        hl.Parent = part; vm_weapon_highlights[part] = hl
+                                    end
+                                    local hl = vm_weapon_highlights[part]
+                                    hl.FillColor = cfg.weapon_chams.color; hl.FillTransparency = cfg.weapon_chams.transparency
+                                    hl.OutlineColor = cfg.weapon_chams.color; hl.OutlineTransparency = cfg.weapon_chams.outline_transparency
+                                    hl.Enabled = true
+                                end
+                            end
+                        end
+                    end
+                    for p, hl in pairs(vm_weapon_highlights) do if not current_w[p] then pcall(function() hl:Destroy() end); vm_weapon_highlights[p] = nil end end
+                    for p, hl in pairs(vm_arm_highlights) do if not current_a[p] then pcall(function() hl:Destroy() end); vm_arm_highlights[p] = nil end end
+                elseif not any_on then
+                    if next(vm_weapon_highlights) or next(vm_arm_highlights) or next(vm_saved_transparency) then clear_viewmodel_chams() end
+                end
+            end
+
+            if now - last_misc_tick > 0.1 then
+                last_misc_tick = now
+
+                if ELI.misc.device_spoof.enable and now - last_device_stamp > 1 then
+                    last_device_stamp = now
+                    pcall(function() replicated_storage.Remotes.Replication.Fighter.SetControls:FireServer(ELI.misc.device_spoof.type) end)
+                end
+
+                -- AUTO VOTE
+                if ELI.misc.auto_vote_map.enable and ELI.misc.auto_vote_map.map ~= "" then
+                    pcall(function()
+                        local duels = replicated_storage:FindFirstChild("Remotes")
+                        duels = duels and duels:FindFirstChild("Duels")
+                        if duels then
+                            for _, r in next, duels:GetChildren() do
+                                if r.Name:lower():find("vote") then
+                                    if r:IsA("RemoteEvent") then r:FireServer(ELI.misc.auto_vote_map.map)
+                                    elseif r:IsA("RemoteFunction") then r:InvokeServer(ELI.misc.auto_vote_map.map) end
+                                end
+                            end
+                        end
+                    end)
+                end
+
+                -- AUTO QUEUE
+                if ELI.misc.auto_queue.enable and ELI.misc.auto_queue.queue_mode ~= "" then
+                    local in_match = false
+                    pcall(function()
+                        if fighter_controller and fighter_controller.LocalFighter then
+                            in_match = fighter_controller.LocalFighter:Get("IsInDuel") == true
+                        end
+                    end)
+                    if in_match then auto_queue_clicked = false
+                    elseif not auto_queue_clicked then
+                        pcall(function() replicated_storage.Remotes.Matchmaking.JoinQueue:InvokeServer(ELI.misc.auto_queue.queue_mode) end)
+                        auto_queue_clicked = true
+                    end
+                end
+
+                if ELI.misc.arcade.auto_respawn then
+                    pcall(function() replicated_storage.Remotes.Duels.RespawnNow:FireServer() end)
+                end
+
+                if ELI.character.walkspeed.enable then
+                    local char = LocalPlayer.Character
+                    local hum = char and char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        local desired = 16 * ELI.character.walkspeed.multiplier
+                        if math.abs(hum.WalkSpeed - desired) > 0.05 then hum.WalkSpeed = desired end
+                    end
+                end
+
+                if ELI.character.slide_boost.enable and mechanics_controller and mechanics_controller.IsSliding then
+                    pcall(function()
+                        mechanics_controller._sliding_velocity.Velocity = mechanics_controller._sliding_velocity.Velocity.Unit * ELI.character.slide_boost.speed
+                    end)
+                end
+
+                if ELI.character.auto_slide and mechanics_controller and mechanics_controller.IsSprinting then
+                    pcall(function() mechanics_controller:Slide() end)
+                end
+
+                if ELI.character.double_jump_height.enable and mechanics_controller then
+                    pcall(function() mechanics_controller._original_jump_power = ELI.character.double_jump_height.height end)
+                end
+
+                if ELI.character.fly.enable and LocalPlayer.Character then
+                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local move = Vector3.new(0,0,0)
+                        if UIS:IsKeyDown(Enum.KeyCode.W) then move += camera.CFrame.LookVector end
+                        if UIS:IsKeyDown(Enum.KeyCode.S) then move -= camera.CFrame.LookVector end
+                        if UIS:IsKeyDown(Enum.KeyCode.A) then move -= camera.CFrame.RightVector end
+                        if UIS:IsKeyDown(Enum.KeyCode.D) then move += camera.CFrame.RightVector end
+                        if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+                        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0,1,0) end
+                        if move.Magnitude > 0 then hrp.CFrame += move.Unit * ELI.character.fly.speed * 0.1
+                        else hrp.CFrame = CFrame.new(hrp.Position) * (hrp.CFrame - hrp.CFrame.Position) end
+                        hrp.AssemblyLinearVelocity = Vector3.zero; hrp.AssemblyAngularVelocity = Vector3.zero
+                    end
+                end
+
+                if ELI.misc.third_person.enable and camera_controller and now - last_tp_stamp > 1 then
+                    last_tp_stamp = now
+                    pcall(function()
+                        local CameraState = camera_controller.CameraState
+                        if not CameraState then return end
+                        local POVSpring = camera_controller._pov_spring
+                        if POVSpring then POVSpring.Target = Vector3.new(ELI.misc.third_person.x, ELI.misc.third_person.y, ELI.misc.third_person.z) end
+                        CameraState:_SetPOVState(CameraState.States.ThirdPerson)
+                    end)
+                end
+
+                if ELI.misc.no_clip and LocalPlayer.Character and now - last_noclip_stamp > 1 then
+                    last_noclip_stamp = now
+                    for _, part in next, LocalPlayer.Character:GetDescendants() do
+                        if part:IsA("BasePart") then pcall(function() part.CanCollide = false end) end
+                    end
+                end
+
+                if ELI.misc.underground and LocalPlayer.Character then
+                    pcall(function()
+                        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            local oldCF = hrp.CFrame
+                            hrp.CFrame = oldCF * CFrame.new(0, -6, 0)
+                            RunService.PreRender:Wait()
+                            hrp.CFrame = oldCF
+                        end
+                    end)
+                end
+
+                if ELI.misc.arcade.grab_drops and LocalPlayer.Character then
+                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        for _, v in next, workspace:GetChildren() do
+                            if v.Name == "_drop" and v:IsA("BasePart") then
+                                pcall(function()
+                                    firetouchinterest(hrp, v, 0)
+                                    firetouchinterest(hrp, v, 1)
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- RAPID FIRE / FULL AUTO
+            if (ELI.guns.full_auto or ELI.guns.rapid_fire) and local_fighter then
+                local equipped = local_fighter.EquippedItem
+                if equipped and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                    if ELI.guns.rapid_fire then
+                        if now - last_rapid_fire >= ELI.guns.rapid_fire_delay then
+                            last_rapid_fire = now
+                            safeThreadIdentity()
+                            pcall(function() local_fighter:Input("StartShooting") end)
+                            safeThreadIdentityReset()
+                        end
+                    else
+                        safeThreadIdentity()
+                        pcall(function() local_fighter:Input("StartShooting") end)
+                        safeThreadIdentityReset()
+                    end
+                end
+            end
+
+            if now - last_rage_equip > 1 then
+                last_rage_equip = now
+                if ELI.ragebot.Enabled then rage_initialEquip() end
+            end
+
+            -- RAGEBOT
+            if ELI.ragebot.Enabled then
+                rage_cleaned = false
+                local targetPlayer, targetRoot, targetHead = rage_getClosestTarget()
+                if not targetPlayer or not targetHead or not targetRoot then
+                    if not rage_cleaned then rage_cleanup(); rage_cleaned = true end
+                else
+                    local isKnife = false
+                    local viewModels = workspace:FindFirstChild("ViewModels")
+                    if viewModels then
+                        for _, model in viewModels:GetChildren() do
+                            if model:IsA("Model") and string.find(model.Name, targetPlayer.Name, 1, true) and string.find(model.Name, "Knife", 1, true) then
+                                isKnife = true; break
+                            end
+                        end
+                    end
+                    local desyncPos
+                    if isKnife then desyncPos = (targetRoot.CFrame * CFrame.new(0, 6, 0)).Position
+                    else desyncPos = (targetRoot.CFrame * CFrame.new(0, 1, 2)).Position end
+                    local desyncCF = CFrame.lookAt(desyncPos, targetHead.Position)
+
+                    if LocalPlayer.Character then
+                        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if myRoot then
+                            if not rage_bound_restore then
+                                rage_restore_root = myRoot
+                                rage_restore_cf = myRoot.CFrame
+                                rage_restore_vel = myRoot.Velocity
+                                rage_bound_restore = true
+                                RunService:BindToRenderStep("__rage_restore", 101, function()
+                                    if rage_restore_root then
+                                        if rage_restore_cf then rage_restore_root.CFrame = rage_restore_cf end
+                                        if rage_restore_vel then rage_restore_root.Velocity = rage_restore_vel end
+                                    end
+                                end)
+                            end
+                            myRoot.CFrame = desyncCF
+                        end
+                    end
+
+                    if not rage_deflecting[targetPlayer] then
+                        local fighter = fighter_controller and fighter_controller.LocalFighter
+                        if fighter then
+                            local item = fighter.EquippedItem
+                            if item and now - rage_lastFire >= ELI.ragebot.FireRate then
+                                rage_lastFire = now
+                                local aimCF = CFrame.lookAt(desyncCF.Position, targetHead.Position)
+                                local objSpaceHeadOffset = targetHead.CFrame:ToObjectSpace(CFrame.new(targetHead.Position))
+                                local cameradata = {}
+                                cameradata[utf8.char(1)] = {
+                                    [utf8.char(0)] = utility:EncodeCFrame(aimCF),
+                                    [utf8.char(1)] = utility:EncodeCFrame(targetHead.CFrame),
+                                    [utf8.char(2)] = targetHead,
+                                    [utf8.char(3)] = utility:EncodeCFrame(objSpaceHeadOffset)
+                                }
+                                pcall(function()
+                                    replicated_storage.Remotes.Replication.Fighter.UseItem:FireServer(item:Get("ObjectID"), enum_library:ToEnum("StartShooting"), cameradata, nil)
+                                end)
+                            end
+                        end
+                    end
+                end
+            elseif not rage_cleaned then
+                rage_cleanup(); rage_cleaned = true
+            end
+
+            if ELI.triggerbot.enable and now - last_ws > 0.05 then
+                last_ws = now
+                if local_fighter and local_fighter.EquippedItem then
+                    local hit = workspace:FindPartOnRayWithIgnoreList(Ray.new(camera.CFrame.Position, camera.CFrame.LookVector * 2500), {LocalPlayer.Character})
+                    if hit and hit.Parent:FindFirstChildWhichIsA('Humanoid') and hit.Parent:FindFirstChildWhichIsA('Humanoid').Health > 0 then
+                        local target_player = Players:GetPlayerFromCharacter(hit.Parent)
+                        if not (ELI.triggerbot.team_check and target_player and target_player:GetAttribute('TeamID') == LocalPlayer:GetAttribute('TeamID')) then
+                            safeThreadIdentity()
+                            local_fighter:Input('StartShooting')
+                            safeThreadIdentityReset()
+                        end
+                    end
+                end
+            end
+
+            if ELI.targeting.auto_shoot and local_fighter then
+                local equipped = local_fighter.EquippedItem
+                if equipped then
+                    local target = getclosest(ELI.silent_aim.fov_radius)
+                    if target and target.Character then
+                        safeThreadIdentity()
+                        local_fighter:Input("StartShooting")
+                        safeThreadIdentityReset()
+                    end
+                end
+            end
+
+            if ELI.aimbot.enable and camera_controller then
+                local target = getclosest(ELI.aimbot.fov_radius)
+                if target and target.Character and target.Character:FindFirstChild(ELI.targeting.part) then
+                    local target_pos = target.Character[ELI.targeting.part].Position
+                    pcall(function()
+                        camera_controller:MimicRotation(camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, target_pos), ELI.aimbot.smoothing))
+                    end)
+                end
+            end
+
+            if ELI.visuals.chams.enable and now - last_chams > 0.2 then
+                last_chams = now
+                local valid = {}
+                for _, plr in Players:GetPlayers() do
+                    if plr ~= LocalPlayer and plr.Character then
+                        local hum = plr.Character:FindFirstChildWhichIsA("Humanoid")
+                        if hum and hum.Health > 0 then
+                            if ELI.visuals.chams.team_check and plr:GetAttribute("TeamID") == LocalPlayer:GetAttribute("TeamID") then continue end
+                            valid[plr] = true
+                            local hl = chams_highlights[plr]
+                            if not hl or not hl.Parent then
+                                hl = Instance.new("Highlight"); hl.Name = "SeahookChams"
+                                pcall(function() hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop end)
+                                hl.Parent = plr.Character; chams_highlights[plr] = hl
+                            end
+                            hl.Adornee = plr.Character
+                            hl.FillColor = ELI.visuals.chams.fill_color; hl.FillTransparency = ELI.visuals.chams.fill_transparency
+                            hl.OutlineColor = ELI.visuals.chams.outline_color; hl.OutlineTransparency = ELI.visuals.chams.outline_transparency
+                        end
+                    end
+                end
+                for plr, hl in pairs(chams_highlights) do
+                    if not valid[plr] then pcall(function() hl:Destroy() end); chams_highlights[plr] = nil end
+                end
+            elseif not ELI.visuals.chams.enable and next(chams_highlights) then
+                for plr, hl in pairs(chams_highlights) do pcall(function() hl:Destroy() end); chams_highlights[plr] = nil end
+            end
+        end)
+
+        -- RENDERSTEP
+        local sfov, sfov_stroke, sfov_fill_gradient, sfov_stroke_gradient
+        local afov, afov_stroke, afov_fill_gradient, afov_stroke_gradient
+        local sfov_gui, afov_gui
+        local sfov_rot, afov_rot = 0, 0
+        local sfov_c_pos, afov_c_pos
+        local sfov_c_rad, afov_c_rad
+
+        local function ensure_fov()
+            if not sfov_gui then
+                sfov_gui = Instance.new("ScreenGui"); sfov_gui.ResetOnSpawn = false; sfov_gui.IgnoreGuiInset = true; sfov_gui.Parent = CoreGuiRef
+                sfov = Instance.new("Frame", sfov_gui); sfov.BorderSizePixel = 0; sfov.Visible = false; sfov.BackgroundTransparency = 1
+                Instance.new("UICorner", sfov).CornerRadius = UDim.new(1, 0)
+                sfov_stroke = Instance.new("UIStroke", sfov); sfov_stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                sfov_fill_gradient = Instance.new("UIGradient", sfov)
+                sfov_stroke_gradient = Instance.new("UIGradient", sfov_stroke)
+                sfov_c_pos = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                sfov_c_rad = ELI.silent_aim.fov_radius
+            end
+            if not afov_gui then
+                afov_gui = Instance.new("ScreenGui"); afov_gui.ResetOnSpawn = false; afov_gui.IgnoreGuiInset = true; afov_gui.Parent = CoreGuiRef
+                afov = Instance.new("Frame", afov_gui); afov.BorderSizePixel = 0; afov.Visible = false; afov.BackgroundTransparency = 1
+                Instance.new("UICorner", afov).CornerRadius = UDim.new(1, 0)
+                afov_stroke = Instance.new("UIStroke", afov); afov_stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                afov_fill_gradient = Instance.new("UIGradient", afov)
+                afov_stroke_gradient = Instance.new("UIGradient", afov_stroke)
+                afov_c_pos = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                afov_c_rad = ELI.aimbot.fov_radius
+            end
+        end
+
+        local ch_angle, ch_accum = 0, 0
+        local mblur_lastlook, mblur_accum
+
+        RunService.RenderStepped:Connect(function(dt)
+            local s_show = ELI.silent_aim.enable and ELI.silent_aim.show_fov
+            local a_show = ELI.aimbot.enable and ELI.aimbot.show_fov
+            if s_show or a_show then
+                ensure_fov()
+                if ELI.silent_aim.fov_spin then sfov_rot = (sfov_rot + ELI.silent_aim.fov_spin_speed * dt) % 360 end
+                if ELI.aimbot.fov_spin then afov_rot = (afov_rot + ELI.aimbot.fov_spin_speed * dt) % 360 end
+                local scenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                local st = math.min(dt * (1 / math.max(ELI.silent_aim.lerp, 0.001)), 1)
+                local at = math.min(dt * (1 / math.max(ELI.aimbot.lerp, 0.001)), 1)
+                sfov_c_pos = sfov_c_pos:Lerp(scenter, st)
+                sfov_c_rad = sfov_c_rad + (ELI.silent_aim.fov_radius - sfov_c_rad) * st
+                afov_c_pos = afov_c_pos:Lerp(scenter, at)
+                afov_c_rad = afov_c_rad + (ELI.aimbot.fov_radius - afov_c_rad) * at
+
+                sfov.Visible = s_show
+                sfov.BackgroundColor3 = ELI.silent_aim.fov_fill_color
+                sfov.BackgroundTransparency = ELI.silent_aim.show_fill and ELI.silent_aim.fov_fill_transparency or 1
+                sfov.Size = UDim2.new(0, sfov_c_rad * 2, 0, sfov_c_rad * 2)
+                sfov.Position = UDim2.new(0, sfov_c_pos.X - sfov_c_rad, 0, sfov_c_pos.Y - sfov_c_rad)
+                sfov.Rotation = sfov_rot
+                sfov_stroke.Color = ELI.silent_aim.fov_color
+                sfov_stroke.Transparency = math.clamp(ELI.silent_aim.fov_outline_transparency, 0, 1)
+                sfov_stroke.Thickness = ELI.silent_aim.fov_thickness
+                sfov_fill_gradient.Enabled = ELI.silent_aim.show_fill
+                sfov_fill_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ELI.silent_aim.fov_fill_color), ColorSequenceKeypoint.new(1, ELI.silent_aim.fov_fill_color2)})
+                sfov_fill_gradient.Rotation = sfov_rot
+                sfov_stroke_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ELI.silent_aim.fov_color), ColorSequenceKeypoint.new(1, ELI.silent_aim.fov_color2 or ELI.silent_aim.fov_color)})
+                sfov_stroke_gradient.Rotation = sfov_rot
+
+                afov.Visible = a_show
+                afov.BackgroundColor3 = ELI.aimbot.fov_fill_color
+                afov.BackgroundTransparency = ELI.aimbot.show_fill and ELI.aimbot.fov_fill_transparency or 1
+                afov.Size = UDim2.new(0, afov_c_rad * 2, 0, afov_c_rad * 2)
+                afov.Position = UDim2.new(0, afov_c_pos.X - afov_c_rad, 0, afov_c_pos.Y - afov_c_rad)
+                afov.Rotation = afov_rot
+                afov_stroke.Color = ELI.aimbot.fov_color
+                afov_stroke.Transparency = math.clamp(ELI.aimbot.fov_outline_transparency, 0, 1)
+                afov_stroke.Thickness = ELI.aimbot.fov_thickness
+                afov_fill_gradient.Enabled = ELI.aimbot.show_fill
+                afov_fill_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ELI.aimbot.fov_fill_color), ColorSequenceKeypoint.new(1, ELI.aimbot.fov_fill_color2)})
+                afov_fill_gradient.Rotation = afov_rot
+                afov_stroke_gradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, ELI.aimbot.fov_color), ColorSequenceKeypoint.new(1, ELI.aimbot.fov_fill_color2 or ELI.aimbot.fov_color)})
+                afov_stroke_gradient.Rotation = afov_rot
+            else
+                if sfov then sfov.Visible = false end
+                if afov then afov.Visible = false end
+            end
+
+            local ch = ELI.visuals.crosshair
+            if ch.enable then
+                ensure_crosshair()
+                ch_accum += dt
+                if ch_accum >= 1/60 then
+                    ch_accum = 0
+                    if ch.spin then ch_angle = (ch_angle + ch.spin_speed * dt) % 360 else ch_angle = ch.rotation end
+                    local rad = math.rad(ch_angle)
+                    local c, s = math.cos(rad), math.sin(rad)
+                    local vp = camera.ViewportSize
+                    local cx, cy = vp.X / 2, vp.Y / 2
+                    local arms = {
+                        { Vector2.new(0, -ch.gap), Vector2.new(0, -ch.gap - ch.length), ch.top_line },
+                        { Vector2.new(0, ch.gap), Vector2.new(0, ch.gap + ch.length), ch.bottom_line },
+                        { Vector2.new(-ch.gap, 0), Vector2.new(-ch.gap - ch.length, 0), ch.left_line },
+                        { Vector2.new(ch.gap, 0), Vector2.new(ch.gap + ch.length, 0), ch.right_line },
+                    }
+                    for i = 1, 4 do
+                        local arm = arms[i]; local l = ch_lines[i]
+                        if arm[3] then
+                            local from, to = arm[1], arm[2]
+                            local fr = Vector2.new(from.X * c - from.Y * s, from.X * s + from.Y * c)
+                            local tr = Vector2.new(to.X * c - to.Y * s, to.X * s + to.Y * c)
+                            local f = Vector2.new(cx + fr.X, cy + fr.Y)
+                            local t = Vector2.new(cx + tr.X, cy + tr.Y)
+                            local len = (t - f).Magnitude
+                            if len > 0.1 then
+                                local mid = (f + t) / 2
+                                l.Position = UDim2.fromOffset(mid.X, mid.Y)
+                                l.Size = UDim2.fromOffset(ch.thickness, len)
+                                l.Rotation = math.deg(math.atan2(t.X - f.X, -(t.Y - f.Y)))
+                                l.BackgroundColor3 = ch.color
+                                l.Visible = true
+                            else l.Visible = false end
+                        else l.Visible = false end
+                    end
+                    if ch.dot then ch_dot.Visible = true; ch_dot.BackgroundColor3 = ch.color; ch_dot.Position = UDim2.fromOffset(cx, cy) else ch_dot.Visible = false end
+                end
+            elseif ch_gui and (ch_lines[1].Visible or ch_dot.Visible) then
+                for i = 1, 4 do ch_lines[i].Visible = false end
+                ch_dot.Visible = false
+            end
+
+            local mbc = ELI.visuals.motion_blur
+            if mbc.enable then
+                ensure_mblur()
+                if not mblur_accum then mblur_accum = 0; mblur_lastlook = camera.CFrame.LookVector end
+                mblur_accum += dt
+                if mblur_accum >= 1/60 then
+                    local real_dt = mblur_accum; mblur_accum = 0
+                    mblur.Enabled = true
+                    local look = camera.CFrame.LookVector
+                    local delta = (look - mblur_lastlook).Magnitude
+                    mblur_lastlook = look
+                    local target = math.clamp(delta / math.max(real_dt, 1/240) * mbc.sensitivity * mbc.intensity * 0.35, 0, 56 * mbc.intensity)
+                    mblur.Size = mblur.Size + (target - mblur.Size) * math.min(real_dt * 20, 1)
+                end
+            elseif mblur and mblur.Enabled then mblur.Enabled = false; mblur.Size = 0 end
+
+            if ELI.visuals.fov_changer.enable then
+                if camera.FieldOfView ~= ELI.visuals.fov_changer.fov then camera.FieldOfView = ELI.visuals.fov_changer.fov end
+            end
+
+            if ELI.visuals.stretched_res.enable then
+                camera.CFrame = camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, ELI.visuals.stretched_res.amount, 0, 0, 0, 1)
+            end
+
+            local vm = ELI.visuals.viewmodel
+            if vm.offsets.enable then
+                if not vm._last_off or tick() - vm._last_off > 0.1 then
+                    vm._last_off = tick()
+                    if item_library and item_library.ViewModels then
+                        for _, v in next, item_library.ViewModels do
+                            if v.RootPartOffset then
+                                if not v._seahook_orig then v._seahook_orig = v.RootPartOffset end
+                                v.RootPartOffset = v._seahook_orig + Vector3.new(vm.offsets.x, vm.offsets.y, vm.offsets.z)
+                            end
+                        end
+                    end
+                end
+            end
+
+            local tj = ELI.visuals.trajectory
+            if tj.enable then
+                local fighter = fighter_controller and fighter_controller.LocalFighter
+                local item = fighter and fighter.EquippedItem
+                local name = item and item.Name
+                local show = tj.all_weapons or (name and throwables[string.lower(name)])
+                if show then
+                    local origin = camera.CFrame.Position
+                    local vel = camera.CFrame.LookVector * tj.speed + Vector3.new(0, tj.arc_up, 0)
+                    local grav = Vector3.new(0, -workspace.Gravity, 0)
+                    local params = RaycastParams.new()
+                    params.FilterType = Enum.RaycastFilterType.Exclude
+                    params.FilterDescendantsInstances = { LocalPlayer.Character, traj_folder }
+                    local points = { origin }
+                    local pos = origin; local v = vel
+                    for _ = 1, 30 do
+                        local nextPos = pos + v * 0.07 + grav * (0.5 * 0.07 * 0.07)
+                        local hit = workspace:Raycast(pos, nextPos - pos, params)
+                        if hit then points[#points + 1] = hit.Position; break end
+                        points[#points + 1] = nextPos
+                        pos = nextPos; v = v + grav * 0.07
+                    end
+                    for i = 1, #points do
+                        local p = traj_getpart(i)
+                        p.Position = points[i]; p.Color = tj.color; p.Transparency = 0
+                    end
+                    for i = #points + 1, #traj_pool do if traj_pool[i] then traj_pool[i].Transparency = 1 end end
+                else
+                    for i = 1, #traj_pool do if traj_pool[i] then traj_pool[i].Transparency = 1 end end
+                end
+            elseif #traj_pool > 0 then
+                for i = 1, #traj_pool do if traj_pool[i] then traj_pool[i].Transparency = 1 end end
+            end
+        end)
+
+        -- UI
+        Library.ForceCheckbox = false
+
+        local Window = Library:CreateWindow({
+            Title = "Seahook",
+            Footer = "go mog the kids 😈",
+            Center = true, AutoShow = true, Resizable = true, ShowCustomCursor = true,
+        })
+
+        local Tabs = {
+            Combat = Window:AddTab("Combat", "crosshair"),
+            Character = Window:AddTab("Character", "user"),
+            Visuals = Window:AddTab("Visuals", "eye"),
+            World = Window:AddTab("World", "sun"),
+            Misc = Window:AddTab("Misc", "settings"),
+            Settings = Window:AddTab("Settings", "settings"),
+        }
+
+        -- COMBAT
+        local aimGroup = Tabs.Combat:AddLeftGroupbox("Silent Aim")
+        aimGroup:AddToggle("SilentAimEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.silent_aim.enable = v end })
+        aimGroup:AddToggle("SilentAimShowFOV", { Text = "Show FOV", Default = false, Callback = function(v) ELI.silent_aim.show_fov = v end })
+        aimGroup:AddToggle("SilentAimShowFill", { Text = "Show Fill", Default = false, Callback = function(v) ELI.silent_aim.show_fill = v end })
+        aimGroup:AddToggle("SilentAimFOVSpin", { Text = "FOV Spin", Default = false, Callback = function(v) ELI.silent_aim.fov_spin = v end })
+        aimGroup:AddSlider("SilentAimFOVSpinSpeed", { Text = "Spin Speed", Default = 90, Min = 0, Max = 720, Rounding = 0, Callback = function(v) ELI.silent_aim.fov_spin_speed = v end })
+        aimGroup:AddSlider("SilentAimFOVRadius", { Text = "FOV Radius", Default = 180, Min = 1, Max = 600, Rounding = 0, Callback = function(v) ELI.silent_aim.fov_radius = v end })
+        aimGroup:AddSlider("SilentAimFOVThickness", { Text = "FOV Thickness", Default = 2, Min = 1, Max = 10, Rounding = 0, Callback = function(v) ELI.silent_aim.fov_thickness = v end })
+        aimGroup:AddSlider("SilentAimHitChance", { Text = "Hit Chance", Default = 100, Min = 1, Max = 100, Rounding = 0, Callback = function(v) ELI.silent_aim.hit_chance = v end })
+        aimGroup:AddLabel("FOV Colors"):AddColorPicker("SilentAimFOVColor", { Default = Color3.fromRGB(120, 81, 166), Title = "Outline", Callback = function(v) ELI.silent_aim.fov_color = v end }):AddColorPicker("SilentAimFOVFillColor", { Default = Color3.fromRGB(120, 81, 166), Title = "Fill", Callback = function(v) ELI.silent_aim.fov_fill_color = v end })
+
+        local aimbotGroup = Tabs.Combat:AddRightGroupbox("Aimbot")
+        aimbotGroup:AddToggle("AimbotEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.aimbot.enable = v end })
+        aimbotGroup:AddToggle("AimbotShowFOV", { Text = "Show FOV", Default = false, Callback = function(v) ELI.aimbot.show_fov = v end })
+        aimbotGroup:AddToggle("AimbotShowFill", { Text = "Show Fill", Default = false, Callback = function(v) ELI.aimbot.show_fill = v end })
+        aimbotGroup:AddToggle("AimbotFOVSpin", { Text = "FOV Spin", Default = false, Callback = function(v) ELI.aimbot.fov_spin = v end })
+        aimbotGroup:AddSlider("AimbotFOVSpinSpeed", { Text = "Spin Speed", Default = 90, Min = 0, Max = 720, Rounding = 0, Callback = function(v) ELI.aimbot.fov_spin_speed = v end })
+        aimbotGroup:AddSlider("AimbotFOVRadius", { Text = "FOV Radius", Default = 180, Min = 1, Max = 600, Rounding = 0, Callback = function(v) ELI.aimbot.fov_radius = v end })
+        aimbotGroup:AddSlider("AimbotFOVThickness", { Text = "FOV Thickness", Default = 2, Min = 1, Max = 10, Rounding = 0, Callback = function(v) ELI.aimbot.fov_thickness = v end })
+        aimbotGroup:AddSlider("AimbotSmooth", { Text = "Smoothing", Default = 1, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.aimbot.smoothing = v end })
+        aimbotGroup:AddLabel("FOV Colors"):AddColorPicker("AimbotFOVColor", { Default = Color3.fromRGB(120, 81, 166), Title = "Outline", Callback = function(v) ELI.aimbot.fov_color = v end }):AddColorPicker("AimbotFOVFillColor", { Default = Color3.fromRGB(120, 81, 166), Title = "Fill", Callback = function(v) ELI.aimbot.fov_fill_color = v end })
+
+        local trigGroup = Tabs.Combat:AddRightGroupbox("Triggerbot")
+        trigGroup:AddToggle("TriggerbotEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.triggerbot.enable = v end })
+        trigGroup:AddToggle("TriggerbotTeamCheck", { Text = "Team Check", Default = false, Callback = function(v) ELI.triggerbot.team_check = v end })
+
+        local gunsGroup = Tabs.Combat:AddRightGroupbox("Guns")
+        gunsGroup:AddToggle("NoMuzzleFlash", { Text = "No Muzzle Flash", Default = false, Callback = function(v) ELI.guns.no_muzzle_flash = v end })
+        gunsGroup:AddToggle("NoSpread", { Text = "No Spread", Default = false, Callback = function(v) ELI.guns.no_spread = v end })
+        gunsGroup:AddToggle("FullAuto", { Text = "Full Auto", Default = false, Callback = function(v) ELI.guns.full_auto = v end })
+        gunsGroup:AddToggle("RapidFire", { Text = "Rapid Fire", Default = false, Callback = function(v) ELI.guns.rapid_fire = v end })
+        gunsGroup:AddSlider("RapidFireDelay", { Text = "Rapid Fire Delay", Default = 0.05, Min = 0.01, Max = 0.5, Rounding = 2, Callback = function(v) ELI.guns.rapid_fire_delay = v end })
+
+        local targetingGroup = Tabs.Combat:AddLeftGroupbox("Targeting")
+        targetingGroup:AddToggle("VisibleOnly", { Text = "Visible Only", Default = false, Callback = function(v) ELI.targeting.visible_only = v end })
+        targetingGroup:AddToggle("AutoShoot", { Text = "Auto Shoot", Default = false, Callback = function(v) ELI.targeting.auto_shoot = v end })
+        targetingGroup:AddToggle("AntiRiotShield", { Text = "Anti Riot Shield", Default = false, Callback = function(v) ELI.silent_aim.riot_shield = v end })
+        targetingGroup:AddDropdown("TargetingPart", { Text = "Hit Part", Values = {"Head","HumanoidRootPart","UpperTorso","LowerTorso"}, Default = 1, Callback = function(v) ELI.targeting.part = v end })
+        targetingGroup:AddSlider("MaxDistance", { Text = "Max Distance", Default = 100, Min = 100, Max = 700, Rounding = 0, Callback = function(v) ELI.targeting.max_distance = v end })
+
+        local rageGroup = Tabs.Combat:AddRightGroupbox("Ragebot")
+        rageGroup:AddToggle("RagebotEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.ragebot.Enabled = v; if v then rage_initialEquip() else rage_cleanup() end end })
+        rageGroup:AddDropdown("RagebotWeaponSlot", { Text = "Weapon Slot", Values = {"Primary","Secondary","Melee"}, Default = 3, Callback = function(v) ELI.ragebot.WeaponSlot = v; if ELI.ragebot.Enabled then rage_initialEquip() end end })
+        rageGroup:AddSlider("RagebotFireRate", { Text = "Fire Rate (x10000/s)", Default = 5, Min = 1, Max = 100, Rounding = 0, Callback = function(v) ELI.ragebot.FireRate = v / 10000 end })
+
+        -- CHARACTER
+        local charMove = Tabs.Character:AddLeftGroupbox("Movement")
+        charMove:AddToggle("InfiniteDoubleJump", { Text = "Infinite Double Jump", Default = false, Callback = function(v) ELI.character.infinite_double_jump = v; if v then enableInfiniteJump() else disableInfiniteJump() end end })
+        charMove:AddToggle("DoubleJumpHeight", { Text = "Custom Double Jump Height", Default = false, Callback = function(v) ELI.character.double_jump_height.enable = v end })
+        charMove:AddSlider("DoubleJumpHeightValue", { Text = "Jump Power", Default = 50, Min = 1, Max = 150, Rounding = 0, Callback = function(v) ELI.character.double_jump_height.height = v end })
+        charMove:AddToggle("SlideBoost", { Text = "Slide Boost", Default = false, Callback = function(v) ELI.character.slide_boost.enable = v end })
+        charMove:AddSlider("SlideBoostSpeed", { Text = "Slide Speed", Default = 60, Min = 1, Max = 100, Rounding = 0, Callback = function(v) ELI.character.slide_boost.speed = v end })
+        charMove:AddToggle("AutoSlide", { Text = "Auto Slide (While Sprinting)", Default = false, Callback = function(v) ELI.character.auto_slide = v end })
+        charMove:AddToggle("Walkspeed", { Text = "Walkspeed", Default = false, Callback = function(v) ELI.character.walkspeed.enable = v end })
+        charMove:AddSlider("WalkspeedMulti", { Text = "Walkspeed Multiplier", Default = 1.5, Min = 1, Max = 10, Rounding = 2, Callback = function(v) ELI.character.walkspeed.multiplier = v end })
+        charMove:AddToggle("Fly", { Text = "Fly", Default = false, Callback = function(v) ELI.character.fly.enable = v end })
+        charMove:AddSlider("FlySpeed", { Text = "Fly Speed", Default = 50, Min = 10, Max = 200, Rounding = 0, Callback = function(v) ELI.character.fly.speed = v end })
+
+        local charEmote = Tabs.Character:AddRightGroupbox("Emote Player")
+        charEmote:AddToggle("EmoteEnabled", { Text = "Enable", Default = false, Callback = function(v) ELI.character.emote.enable = v; if not v then emote_stop() end end })
+        charEmote:AddDropdown("EmoteSelect", { Text = "Emote", Default = 1, Values = {"Meditate","Orbit","Floss","Take the L","Hype","Dab","Default Dance","Gangnam Style","Macarena","Robot","Boneless","Backflip","Spongebob","Moonwalk","Laugh"}, Callback = function(v) ELI.character.emote.selected = v; emote_last_id = ""; emote_fallback_used = false end })
+        charEmote:AddInput("EmoteCustomId", { Text = "Custom ID", Default = "", Placeholder = "rbxassetid id", Callback = function(v) ELI.character.emote.custom_id = v or ""; emote_last_id = ""; emote_fallback_used = false end })
+        charEmote:AddSlider("EmoteSpeed", { Text = "Speed", Default = 2, Min = 0.1, Max = 10, Rounding = 1, Callback = function(v) ELI.character.emote.speed = v end })
+
+        local aaGroup = Tabs.Character:AddLeftGroupbox("Anti Aim")
+        aaGroup:AddToggle("AntiAimEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.antiaim.enable = v; if v then installAntiAim() else uninstallAntiAim() end end })
+        aaGroup:AddToggle("AntiAimSpinbot", { Text = "Spinbot", Default = true, Callback = function(v) ELI.antiaim.spinbot = v end })
+        aaGroup:AddToggle("AntiAimArmSpin", { Text = "Arm Spin", Default = true, Callback = function(v) ELI.antiaim.arm_spin = v end })
+        aaGroup:AddSlider("AntiAimSpeed", { Text = "Speed (deg/frame)", Default = 30, Min = 1, Max = 180, Rounding = 0, Callback = function(v) ELI.antiaim.speed = v end })
+        aaGroup:AddSlider("AntiAimPitch", { Text = "Pitch (radians)", Default = -3.14, Min = -6.28, Max = 6.28, Rounding = 2, Callback = function(v) ELI.antiaim.pitch = v end })
+
+        -- VISUALS
+        local visGroup = Tabs.Visuals:AddLeftGroupbox("Player Chams")
+        visGroup:AddToggle("ChamsEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.visuals.chams.enable = v end }):AddColorPicker("ChamsFill", { Default = Color3.fromRGB(0,170,255), Title = "Fill Color", Callback = function(v) ELI.visuals.chams.fill_color = v end }):AddColorPicker("ChamsOutline", { Default = Color3.fromRGB(255,255,255), Title = "Outline Color", Callback = function(v) ELI.visuals.chams.outline_color = v end })
+        visGroup:AddSlider("ChamsFillTransparency", { Text = "Fill Transparency", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.chams.fill_transparency = v end })
+        visGroup:AddToggle("ChamsTeamCheck", { Text = "Team Check", Default = false, Callback = function(v) ELI.visuals.chams.team_check = v end })
+
+        local vmGroup = Tabs.Visuals:AddRightGroupbox("Viewmodel Chams")
+        vmGroup:AddToggle("VMWeaponChams", { Text = "Weapon Chams", Default = false, Callback = function(v) ELI.visuals.viewmodel.weapon_chams.enable = v end }):AddColorPicker("VMWeaponChamsColor", { Default = Color3.fromRGB(0,170,255), Title = "Weapon Color", Callback = function(v) ELI.visuals.viewmodel.weapon_chams.color = v end })
+        vmGroup:AddSlider("VMWeaponTransparency", { Text = "Weapon Fill Transparency", Default = 0.3, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.weapon_chams.transparency = v end })
+        vmGroup:AddSlider("VMWeaponOutlineTransparency", { Text = "Weapon Outline Transparency", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.weapon_chams.outline_transparency = v end })
+        vmGroup:AddDivider()
+        vmGroup:AddToggle("VMArmChams", { Text = "Arm Chams", Default = false, Callback = function(v) ELI.visuals.viewmodel.arm_chams.enable = v end }):AddColorPicker("VMArmChamsColor", { Default = Color3.fromRGB(0,170,255), Title = "Arm Color", Callback = function(v) ELI.visuals.viewmodel.arm_chams.color = v end })
+        vmGroup:AddSlider("VMArmTransparency", { Text = "Arm Fill Transparency", Default = 0.3, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.arm_chams.transparency = v end })
+        vmGroup:AddSlider("VMArmOutlineTransparency", { Text = "Arm Outline Transparency", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.arm_chams.outline_transparency = v end })
+        vmGroup:AddToggle("VMArmInvisible", { Text = "Invisible Arms", Default = false, Callback = function(v) ELI.visuals.viewmodel.arm_chams.invisible = v end })
+        vmGroup:AddDivider()
+        vmGroup:AddToggle("VMOffsetsEnabled", { Text = "Viewmodel Offsets", Default = false, Callback = function(v) ELI.visuals.viewmodel.offsets.enable = v end })
+        vmGroup:AddSlider("VMOffsetX", { Text = "Offset X", Default = 0, Min = -5, Max = 5, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.offsets.x = v end })
+        vmGroup:AddSlider("VMOffsetY", { Text = "Offset Y", Default = 0, Min = -5, Max = 5, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.offsets.y = v end })
+        vmGroup:AddSlider("VMOffsetZ", { Text = "Offset Z", Default = 0, Min = -5, Max = 5, Rounding = 2, Callback = function(v) ELI.visuals.viewmodel.offsets.z = v end })
+
+        local hitGroup = Tabs.Visuals:AddLeftGroupbox("Hit Feedback")
+        hitGroup:AddToggle("HitNotifyEnabled", { Text = "Hit Notify", Default = false, Callback = function(v) ELI.visuals.hit_notify.enable = v end }):AddColorPicker("HitNotifyColor", { Default = Color3.fromRGB(255,200,50), Title = "Color", Callback = function(v) ELI.visuals.hit_notify.color = v end })
+        hitGroup:AddInput("HitNotifyMsg", { Text = "Message", Default = "hit {target} for {damage}", Placeholder = "use {target} {damage}", Callback = function(v) ELI.visuals.hit_notify.msg = v end })
+        hitGroup:AddSlider("HitNotifyDuration", { Text = "Duration", Default = 3, Min = 1, Max = 8, Rounding = 1, Callback = function(v) ELI.visuals.hit_notify.duration = v end })
+        hitGroup:AddToggle("HitSoundEnabled", { Text = "Custom Hitsound", Default = false, Callback = function(v) ELI.visuals.hitsound.enable = v end })
+        hitGroup:AddDropdown("HitSoundSelected", { Text = "Sound", Default = 1, Values = {"windows xp","minecraft bow","neverlose","steve","among us","bonk","rust","fatality","hitmarker","csgo"}, Callback = function(v) ELI.visuals.hitsound.selected = v end })
+        hitGroup:AddSlider("HitSoundVolume", { Text = "Volume", Default = 1, Min = 0, Max = 5, Rounding = 1, Callback = function(v) ELI.visuals.hitsound.volume = v end })
+        hitGroup:AddSlider("HitSoundPitch", { Text = "Pitch", Default = 1, Min = 0.5, Max = 2, Rounding = 2, Callback = function(v) ELI.visuals.hitsound.pitch = v end })
+
+        local fovGroup = Tabs.Visuals:AddLeftGroupbox("FOV / Resolution")
+        fovGroup:AddToggle("FovChangerEnabled", { Text = "FOV Changer", Default = false, Callback = function(v) ELI.visuals.fov_changer.enable = v end })
+        fovGroup:AddSlider("FovChangerValue", { Text = "FOV", Default = 80, Min = 20, Max = 140, Rounding = 0, Callback = function(v) ELI.visuals.fov_changer.fov = v end })
+        fovGroup:AddToggle("StretchedResEnabled", { Text = "Stretched Res", Default = false, Callback = function(v) ELI.visuals.stretched_res.enable = v end })
+        fovGroup:AddSlider("StretchedResAmount", { Text = "Amount", Default = 0.20, Min = 0.1, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.stretched_res.amount = v end })
+
+        local mblurGroup = Tabs.Visuals:AddRightGroupbox("Motion Blur")
+        mblurGroup:AddToggle("MotionBlurEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.visuals.motion_blur.enable = v end })
+        mblurGroup:AddSlider("MotionBlurIntensity", { Text = "Intensity", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.visuals.motion_blur.intensity = v end })
+        mblurGroup:AddSlider("MotionBlurSensitivity", { Text = "Sensitivity", Default = 1, Min = 0.1, Max = 3, Rounding = 2, Callback = function(v) ELI.visuals.motion_blur.sensitivity = v end })
+
+        local trajGroup = Tabs.Visuals:AddLeftGroupbox("Trajectory")
+        trajGroup:AddToggle("TrajectoryEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.visuals.trajectory.enable = v end }):AddColorPicker("TrajectoryColor", { Default = Color3.fromRGB(120,81,166), Title = "Color", Callback = function(v) ELI.visuals.trajectory.color = v end })
+        trajGroup:AddToggle("TrajectoryAllWeapons", { Text = "All Weapons", Default = false, Callback = function(v) ELI.visuals.trajectory.all_weapons = v end })
+        trajGroup:AddSlider("TrajectorySpeed", { Text = "Throw Speed", Default = 90, Min = 20, Max = 300, Rounding = 0, Callback = function(v) ELI.visuals.trajectory.speed = v end })
+        trajGroup:AddSlider("TrajectoryArc", { Text = "Arc Height", Default = 10, Min = 0, Max = 60, Rounding = 0, Callback = function(v) ELI.visuals.trajectory.arc_up = v end })
+
+        local dmgGroup = Tabs.Visuals:AddRightGroupbox("Damage Numbers")
+        dmgGroup:AddToggle("DamageNumbersEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.visuals.damage_numbers.enable = v end }):AddColorPicker("DamageNumbersColor1", { Default = Color3.fromRGB(255,80,80), Title = "Color 1", Callback = function(v) ELI.visuals.damage_numbers.color1 = v end }):AddColorPicker("DamageNumbersColor2", { Default = Color3.fromRGB(255,210,90), Title = "Color 2", Callback = function(v) ELI.visuals.damage_numbers.color2 = v end })
+        dmgGroup:AddDropdown("DamageNumbersColorType", { Text = "Color Type", Default = 1, Values = {"Gradient","Solid","Rainbow"}, Callback = function(v) ELI.visuals.damage_numbers.color_type = v end })
+        dmgGroup:AddSlider("DamageNumbersSize", { Text = "Text Size", Default = 18, Min = 10, Max = 40, Rounding = 0, Callback = function(v) ELI.visuals.damage_numbers.text_size = v end })
+        dmgGroup:AddSlider("DamageNumbersRise", { Text = "Rise", Default = 42, Min = 0, Max = 120, Rounding = 0, Callback = function(v) ELI.visuals.damage_numbers.rise = v end })
+        dmgGroup:AddSlider("DamageNumbersDuration", { Text = "Duration", Default = 0.8, Min = 0.2, Max = 3, Rounding = 2, Callback = function(v) ELI.visuals.damage_numbers.duration = v end })
+
+        local crossGroup = Tabs.Visuals:AddLeftGroupbox("Crosshair")
+        crossGroup:AddToggle("CrosshairEnabled", { Text = "Enabled", Default = false, Callback = function(v) ELI.visuals.crosshair.enable = v end }):AddColorPicker("CrosshairColor", { Default = Color3.fromRGB(0,255,170), Title = "Color", Callback = function(v) ELI.visuals.crosshair.color = v end })
+        crossGroup:AddSlider("CrosshairLength", { Text = "Length", Default = 6, Min = 0, Max = 40, Rounding = 0, Callback = function(v) ELI.visuals.crosshair.length = v end })
+        crossGroup:AddSlider("CrosshairThickness", { Text = "Thickness", Default = 1, Min = 1, Max = 6, Rounding = 0, Callback = function(v) ELI.visuals.crosshair.thickness = v end })
+        crossGroup:AddSlider("CrosshairGap", { Text = "Gap", Default = 3, Min = 0, Max = 20, Rounding = 0, Callback = function(v) ELI.visuals.crosshair.gap = v end })
+        crossGroup:AddToggle("CrosshairDot", { Text = "Center Dot", Default = false, Callback = function(v) ELI.visuals.crosshair.dot = v end })
+        crossGroup:AddToggle("CrosshairSpin", { Text = "Spin", Default = false, Callback = function(v) ELI.visuals.crosshair.spin = v end })
+        crossGroup:AddSlider("CrosshairSpinSpeed", { Text = "Spin Speed", Default = 90, Min = 0, Max = 720, Rounding = 0, Callback = function(v) ELI.visuals.crosshair.spin_speed = v end })
+        crossGroup:AddToggle("CrosshairTop", { Text = "Top Line", Default = true, Callback = function(v) ELI.visuals.crosshair.top_line = v end })
+        crossGroup:AddToggle("CrosshairBottom", { Text = "Bottom Line", Default = true, Callback = function(v) ELI.visuals.crosshair.bottom_line = v end })
+        crossGroup:AddToggle("CrosshairLeft", { Text = "Left Line", Default = true, Callback = function(v) ELI.visuals.crosshair.left_line = v end })
+        crossGroup:AddToggle("CrosshairRight", { Text = "Right Line", Default = true, Callback = function(v) ELI.visuals.crosshair.right_line = v end })
+
+        -- WORLD
+        local wl = Tabs.World:AddLeftGroupbox("Lighting")
+        wl:AddToggle("WorldFog", { Text = "Fog", Default = false, Callback = function(v) ELI.world.fog.enable = v; if not v then Lighting.FogColor = world_original.fog_color; Lighting.FogStart = world_original.fog_start; Lighting.FogEnd = world_original.fog_end end end }):AddColorPicker("WorldFogColor", { Default = Color3.fromRGB(255,255,255), Title = "Fog Color", Callback = function(v) ELI.world.fog.color = v end })
+        wl:AddSlider("WorldFogStart", { Text = "Fog Start", Default = 150, Min = 0, Max = 10000, Rounding = 0, Callback = function(v) ELI.world.fog.start = v end })
+        wl:AddSlider("WorldFogEnd", { Text = "Fog End", Default = 550, Min = 0, Max = 10000, Rounding = 0, Callback = function(v) ELI.world.fog.finish = v end })
+        wl:AddDivider()
+        wl:AddToggle("WorldAmbient", { Text = "Ambient", Default = false, Callback = function(v) ELI.world.ambient.enable = v; if not v then Lighting.Ambient = world_original.ambient end end }):AddColorPicker("WorldAmbientColor", { Default = Color3.fromRGB(255,255,255), Title = "Ambient Color", Callback = function(v) ELI.world.ambient.color = v end })
+        wl:AddToggle("WorldClock", { Text = "Clock Time", Default = false, Callback = function(v) ELI.world.clock.enable = v; if not v then Lighting.ClockTime = world_original.clock_time end end })
+        wl:AddSlider("WorldClockTime", { Text = "Time", Default = 14, Min = 0, Max = 24, Rounding = 1, Callback = function(v) ELI.world.clock.time = v end })
+        wl:AddToggle("WorldBrightness", { Text = "Brightness", Default = false, Callback = function(v) ELI.world.brightness.enable = v; if not v then Lighting.Brightness = world_original.brightness end end })
+        wl:AddSlider("WorldBrightnessLevel", { Text = "Brightness", Default = 1, Min = 0, Max = 10, Rounding = 1, Callback = function(v) ELI.world.brightness.level = v end })
+        wl:AddToggle("WorldExposure", { Text = "Exposure", Default = false, Callback = function(v) ELI.world.exposure.enable = v; if not v then Lighting.ExposureCompensation = world_original.exposure end end })
+        wl:AddSlider("WorldExposureLevel", { Text = "Exposure", Default = 0, Min = -10, Max = 10, Rounding = 1, Callback = function(v) ELI.world.exposure.level = v end })
+        wl:AddToggle("WorldColorShiftTop", { Text = "Color Shift Top", Default = false, Callback = function(v) ELI.world.color_shift_top.enable = v; if not v then Lighting.ColorShift_Top = world_original.color_shift_top end end }):AddColorPicker("WorldColorShiftTopColor", { Default = Color3.fromRGB(255,255,255), Title = "Top Color", Callback = function(v) ELI.world.color_shift_top.color = v end })
+        wl:AddToggle("WorldColorShiftBottom", { Text = "Color Shift Bottom", Default = false, Callback = function(v) ELI.world.color_shift_bottom.enable = v; if not v then Lighting.ColorShift_Bottom = world_original.color_shift_bottom end end }):AddColorPicker("WorldColorShiftBottomColor", { Default = Color3.fromRGB(255,255,255), Title = "Bottom Color", Callback = function(v) ELI.world.color_shift_bottom.color = v end })
+
+        local ws = Tabs.World:AddRightGroupbox("Skybox")
+        ws:AddToggle("WorldSkybox", { Text = "Skybox", Default = false, Callback = function(v) ELI.world.skybox.enable = v; apply_skybox() end })
+        ws:AddDropdown("WorldSkyboxSelected", { Text = "Preset", Values = skybox_names, Default = 1, Callback = function(v) ELI.world.skybox.selected = v; if ELI.world.skybox.enable then apply_skybox() end end })
+        ws:AddToggle("WorldSkyboxRotate", { Text = "Skybox Rotator", Default = false, Callback = function(v) ELI.world.skybox.rotate = v end })
+        ws:AddSlider("WorldSkyboxRotateSpeed", { Text = "Rotation Speed", Default = 1, Min = 0, Max = 100, Rounding = 1, Callback = function(v) ELI.world.skybox.rotate_speed = v end })
+        ws:AddDropdown("WorldSkyboxRotateDirection", { Text = "Rotation Direction", Default = 1, Values = {"Horizontal","Vertical","Diagonal"}, Callback = function(v) ELI.world.skybox.rotate_direction = v end })
+        ws:AddDropdown("WorldSkyboxRotateMethod", { Text = "Rotation Method", Default = 1, Values = {"Spin","Wave","Alternate"}, Callback = function(v) ELI.world.skybox.rotate_method = v end })
+        ws:AddDivider()
+        ws:AddToggle("WorldSkyboxRemoveSun", { Text = "Remove Sun", Default = false, Callback = function(v) ELI.world.skybox.remove_sun = v; if ELI.world.skybox.enable then apply_skybox() end end })
+        ws:AddToggle("WorldSkyboxRemoveMoon", { Text = "Remove Moon", Default = false, Callback = function(v) ELI.world.skybox.remove_moon = v; if ELI.world.skybox.enable then apply_skybox() end end })
+        ws:AddToggle("WorldSkyboxRemoveStars", { Text = "Remove Stars", Default = false, Callback = function(v) ELI.world.skybox.remove_stars = v; if ELI.world.skybox.enable then apply_skybox() end end })
+
+        local wa = Tabs.World:AddLeftGroupbox("Atmosphere")
+        wa:AddToggle("WorldAtmosphere", { Text = "Enabled", Default = false, Callback = function(v) ELI.world.atmosphere.enable = v; if not v and original_atmosphere then local restored = original_atmosphere:Clone(); if atmosphere_instance then atmosphere_instance:Destroy() end; restored.Parent = Lighting; atmosphere_instance = restored elseif v and atmosphere_instance and not atmosphere_instance.Parent then atmosphere_instance.Parent = Lighting end end }):AddColorPicker("WorldAtmosphereColor", { Default = Color3.fromRGB(255,255,255), Title = "Atmosphere Color", Callback = function(v) ELI.world.atmosphere.color = v end }):AddColorPicker("WorldAtmosphereDecay", { Default = Color3.fromRGB(90,60,30), Title = "Decay Color", Callback = function(v) ELI.world.atmosphere.decay = v end })
+        wa:AddSlider("WorldAtmosGlare", { Text = "Glare", Default = 1.5, Min = 0, Max = 10, Rounding = 2, Callback = function(v) ELI.world.atmosphere.glare = v end })
+        wa:AddSlider("WorldAtmosHaze", { Text = "Haze", Default = 10, Min = 0, Max = 100, Rounding = 2, Callback = function(v) ELI.world.atmosphere.haze = v end })
+        wa:AddSlider("WorldAtmosOffset", { Text = "Offset", Default = 0.4, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.world.atmosphere.offset = v end })
+        wa:AddSlider("WorldAtmosDensity", { Text = "Density", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.world.atmosphere.density = v end })
+
+        local wsh = Tabs.World:AddRightGroupbox("Shaders")
+        wsh:AddToggle("WorldBlur", { Text = "Blur", Default = false, Callback = function(v) ELI.world.shaders.blur.enable = v; world_shaders.blur.Enabled = v end })
+        wsh:AddSlider("WorldBlurSize", { Text = "Blur Size", Default = 12, Min = 0, Max = 56, Rounding = 0, Callback = function(v) ELI.world.shaders.blur.size = v; world_shaders.blur.Size = v end })
+        wsh:AddToggle("WorldBloom", { Text = "Bloom", Default = false, Callback = function(v) ELI.world.shaders.bloom.enable = v; world_shaders.bloom.Enabled = v end })
+        wsh:AddSlider("WorldBloomIntensity", { Text = "Bloom Intensity", Default = 1, Min = 0, Max = 5, Rounding = 2, Callback = function(v) ELI.world.shaders.bloom.intensity = v; world_shaders.bloom.Intensity = v end })
+        wsh:AddSlider("WorldBloomSize", { Text = "Bloom Size", Default = 24, Min = 0, Max = 56, Rounding = 0, Callback = function(v) ELI.world.shaders.bloom.size = v; world_shaders.bloom.Size = v end })
+        wsh:AddSlider("WorldBloomThreshold", { Text = "Bloom Threshold", Default = 0.9, Min = 0, Max = 2, Rounding = 2, Callback = function(v) ELI.world.shaders.bloom.threshold = v; world_shaders.bloom.Threshold = v end })
+        wsh:AddToggle("WorldDoF", { Text = "Depth of Field", Default = false, Callback = function(v) ELI.world.shaders.dof.enable = v; world_shaders.dof.Enabled = v end })
+        wsh:AddSlider("WorldDoFFocus", { Text = "Focus Distance", Default = 25, Min = 0, Max = 500, Rounding = 0, Callback = function(v) ELI.world.shaders.dof.focus = v; world_shaders.dof.FocusDistance = v end })
+        wsh:AddSlider("WorldDoFIntensity", { Text = "Blur Intensity", Default = 0.15, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.world.shaders.dof.intensity = v; world_shaders.dof.NearIntensity = v; world_shaders.dof.FarIntensity = v end })
+        wsh:AddToggle("WorldSunRays", { Text = "Sun Rays", Default = false, Callback = function(v) ELI.world.shaders.sunrays.enable = v; world_shaders.sunrays.Enabled = v end })
+        wsh:AddSlider("WorldSunRaysIntensity", { Text = "Sun Rays Intensity", Default = 0.25, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.world.shaders.sunrays.intensity = v; world_shaders.sunrays.Intensity = v end })
+        wsh:AddSlider("WorldSunRaysSpread", { Text = "Sun Rays Spread", Default = 1, Min = 0, Max = 1, Rounding = 2, Callback = function(v) ELI.world.shaders.sunrays.spread = v; world_shaders.sunrays.Spread = v end })
+        wsh:AddToggle("WorldCC", { Text = "Color Grading", Default = false, Callback = function(v) ELI.world.shaders.cc.enable = v; world_shaders.cc.Enabled = v end }):AddColorPicker("WorldCCTint", { Default = Color3.fromRGB(255,255,255), Title = "Tint Color", Callback = function(v) ELI.world.shaders.cc.tint = v; world_shaders.cc.TintColor = v end })
+        wsh:AddSlider("WorldCCSaturation", { Text = "Saturation", Default = 0, Min = -1, Max = 5, Rounding = 2, Callback = function(v) ELI.world.shaders.cc.saturation = v; world_shaders.cc.Saturation = v end })
+        wsh:AddSlider("WorldCCContrast", { Text = "Contrast", Default = 0, Min = -1, Max = 1, Rounding = 2, Callback = function(v) ELI.world.shaders.cc.contrast = v; world_shaders.cc.Contrast = v end })
+
+        -- MISC
+        local spoofGroup = Tabs.Misc:AddLeftGroupbox("Spoof")
+        spoofGroup:AddToggle("DeviceSpoof", { Text = "Device Spoof", Default = false, Callback = function(v) ELI.misc.device_spoof.enable = v end })
+        spoofGroup:AddDropdown("DeviceSpoofType", { Text = "Device Type", Default = 2, Values = {"Touch","MouseKeyboard","Gamepad","VR"}, Callback = function(v) ELI.misc.device_spoof.type = v end })
+
+        -- =====================================================
+        -- NAME SPOOFER UI
+        -- =====================================================
+        local spooferFields = {
+            { key = "winstreak",  label = "Win Streak",       ctrl = "number" },
+            { key = "level",      label = "Level",            ctrl = "number" },
+            { key = "elo",        label = "Ranked ELO",       ctrl = "number" },
+            { key = "status",     label = "Nametag Status",   ctrl = "text" },
+            { key = "influencer", label = "Influencer",       ctrl = "const" },
+            { key = "employee",   label = "Roblox Employee",  ctrl = "const" },
+            { key = "group",      label = "Nosniy's Team",    ctrl = "const" },
+        }
+
+        local function buildSpooferGroup(scopeKey, groupTitle)
+            local cfg = ELI.misc.spoofer[scopeKey]
+            local group = Tabs.Misc:AddRightGroupbox(groupTitle)
+
+            group:AddToggle("Spoofer_" .. scopeKey .. "_Master", {
+                Text = "Enabled",
+                Default = false,
+                Callback = function(v)
+                    cfg.enabled = v
+                    Spoofer.Refresh()
+                end,
+            })
+
+            for _, field in ipairs(spooferFields) do
+                group:AddToggle("Spoofer_" .. scopeKey .. "_" .. field.key .. "_T", {
+                    Text = field.label,
+                    Default = false,
+                    Callback = function(v)
+                        cfg.values[field.key .. "_on"] = v
+                        Spoofer.Refresh()
+                    end,
+                })
+                if field.ctrl == "number" then
+                    group:AddSlider("Spoofer_" .. scopeKey .. "_" .. field.key .. "_V", {
+                        Text = "  value",
+                        Default = tonumber(cfg.values[field.key]) or 0,
+                        Min = 0, Max = 9999, Rounding = 0,
+                        Callback = function(v)
+                            cfg.values[field.key] = tostring(math.floor(v))
+                            Spoofer.Refresh()
+                        end,
+                    })
+                elseif field.ctrl == "text" then
+                    group:AddInput("Spoofer_" .. scopeKey .. "_" .. field.key .. "_V", {
+                        Text = "  value",
+                        Default = cfg.values[field.key] or "",
+                        Placeholder = "text",
+                        Callback = function(v)
+                            cfg.values[field.key] = v or ""
+                            Spoofer.Refresh()
+                        end,
+                    })
+                end
+            end
+        end
+
+        buildSpooferGroup("you", "Name Spoofer (You)")
+        buildSpooferGroup("others", "Name Spoofer (Others)")
+
+        local miscGroup = Tabs.Misc:AddRightGroupbox("Player")
+        miscGroup:AddToggle("NoClip", { Text = "No Clip", Default = true, Callback = function(v) ELI.misc.no_clip = v end })
+        miscGroup:AddToggle("ThirdPerson", { Text = "Third Person", Default = false, Callback = function(v) ELI.misc.third_person.enable = v end })
+        miscGroup:AddSlider("ThirdPersonX", { Text = "Offset X", Default = 0, Min = -20, Max = 20, Rounding = 1, Callback = function(v) ELI.misc.third_person.x = v end })
+        miscGroup:AddSlider("ThirdPersonY", { Text = "Offset Y", Default = 1.5, Min = -10, Max = 20, Rounding = 1, Callback = function(v) ELI.misc.third_person.y = v end })
+        miscGroup:AddSlider("ThirdPersonZ", { Text = "Offset Z", Default = 13, Min = 1, Max = 50, Rounding = 1, Callback = function(v) ELI.misc.third_person.z = v end })
+        miscGroup:AddToggle("Underground", { Text = "Underground", Default = false, Callback = function(v) ELI.misc.underground = v end })
+
+        local arcadeGroup = Tabs.Misc:AddLeftGroupbox("Arcade")
+        arcadeGroup:AddToggle("GrabDrops", { Text = "Grab Drops", Default = false, Callback = function(v) ELI.misc.arcade.grab_drops = v end })
+        arcadeGroup:AddToggle("AutoRespawn", { Text = "Auto Respawn", Default = false, Callback = function(v) ELI.misc.arcade.auto_respawn = v end })
+
+        local autoGroup = Tabs.Misc:AddRightGroupbox("Auto")
+        autoGroup:AddToggle("AutoVoteMap", { Text = "Auto Vote Map", Default = false, Callback = function(v) ELI.misc.auto_vote_map.enable = v end })
+        autoGroup:AddDropdown("AutoVoteMapChoice", { Text = "Map", Default = 1, Values = {"Arena","Big Graveyard","Docks","Splash","Bridge","Crossroads","Big Crossroads","Big Backrooms","Battleground","Big Arena","Construction","Playground","Onyx","Graveyard","Big Splash","Big Onyx","Backrooms","Station","Dimension"}, Callback = function(v) ELI.misc.auto_vote_map.map = v end })
+        autoGroup:AddToggle("AutoQueue", { Text = "Auto Queue", Default = false, Callback = function(v) ELI.misc.auto_queue.enable = v end })
+        autoGroup:AddDropdown("AutoQueueMode", { Text = "Queue Mode", Default = 1, Values = {"1v1","2v2","3v3","4v4","5v5","2v2_beginner"}, Callback = function(v) ELI.misc.auto_queue.queue_mode = v end })
+
+        local menuGroup = Tabs.Settings:AddLeftGroupbox("Menu")
+        menuGroup:AddLabel("Menu Keybind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", Text = "Menu Keybind", Mode = "Toggle", NoUI = true })
+        Library.ToggleKeybind = Options.MenuKeybind
+        menuGroup:AddButton("Unload Script", function()
+            Spoofer.Destroy()
+            Library:Unload()
+        end)
+
+        ThemeManager:SetLibrary(Library)
+        SaveManager:SetLibrary(Library)
+        SaveManager:IgnoreThemeSettings()
+        SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+        ThemeManager:SetFolder("Seahook")
+        SaveManager:SetFolder("Seahook/configs")
+        SaveManager:BuildConfigSection(Tabs.Settings)
+        ThemeManager:ApplyToTab(Tabs.Settings)
+        pcall(function() SaveManager:LoadAutoloadConfig() end)
+
+        Library:Notify({ Title = "Seahook", Description = "loaded 😈", Time = 3 })
+    end)
+    if not ok then
+        warn("[Seahook] failed:", err)
+    end
+end
+
+SeahookLoadingScreen(function()
+    task.spawn(function()
+        local ok, err = pcall(BuildSeahook)
+        if not ok then
+            warn("[Seahook] crashed:", err)
+        end
+    end)
+end)
